@@ -1,0 +1,48 @@
+name: Build
+
+on:
+  push:
+    branches: [ "**" ]
+    tags-ignore: [ "**" ]
+  pull_request:
+  release:
+    types: [published, edited]
+
+jobs:
+  build:
+    name: "Build"
+    # Only run on PRs if the source branch is on someone else's repo
+    if: ${{ github.event_name != 'pull_request' || github.repository != github.event.pull_request.head.repo.full_name }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: 'temurin'
+          
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Artifact
+        run: gradle build
+        
+      - name: Upload Artifact to Actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: "${{ github.event.repository.name }}-artifacts"
+          path: build/libs/*.jar
+          if-no-files-found: error
+
+      - name: Publish Artifact
+        if: ${{ github.event_name == 'release' }}
+        run: gradle publish
+        env:
+          ORG_GRADLE_PROJECT_xpdustryUsername: "${{ secrets.XPDUSTRY_MAVEN_USERNAME }}"
+          ORG_GRADLE_PROJECT_xpdustryPassword: "${{ secrets.XPDUSTRY_MAVEN_PASSWORD }}"
+          ORG_GRADLE_PROJECT_signingKey: "${{ secrets.ZETAMAP_MAVEN_SIGNING_KEY }}"
+          ORG_GRADLE_PROJECT_signingPassword: "${{ secrets.ZETAMAP_MAVEN_SIGNING_PASSWORD }}"

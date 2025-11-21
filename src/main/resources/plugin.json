@@ -1,8 +1,0 @@
-{
-  "name": "moreCommands",
-  "displayName": "morecommands",
-  "author": "ZetaMap",
-  "main": "moreCommandsPlugin",
-  "description": "This mindustry plugin add more commands for admins and players.",
-  "version": 11.4
-}

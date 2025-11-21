@@ -1,0 +1,15 @@
+name: more-commands
+displayName: More Commands
+author: ZetaMap
+main: fr.zetamap.morecommands.Main
+description: This mindustry plugin adds a bunch of commands (60+) to your server.
+version: "v12"
+minGameVersion: "151"
+java: true
+hidden: true
+repo: ZetaMap/MoreCommands
+softDependencies: [
+  simple-blacklist,
+  anti-vpn-service, 
+  slf4md
+]

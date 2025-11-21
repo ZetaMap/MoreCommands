@@ -1,79 +1,91 @@
-![Visitor Badge](https://visitor-badge.laobi.icu/badge?page_id=ZetaMap.moreCommands) ![Download](https://shields.io/github/downloads/ZetaMap/moreCommands/total) ![GitHub Clones](https://img.shields.io/badge/dynamic/json?color=success&label=Clones&query=count&url=https://gist.githubusercontent.com/ZetaMap/e8cbd0ed420987f8c25b6945fd80e3b0/raw/clone.json&logo=github)
-# moreCommands Plugin
-**/!\\This plugin need java 12 or greater./!\\** To download java 12, follow steps [here](https://www.oracle.com/fr/java/technologies/javase/jdk12-archive-downloads.html) or greater version [here](https://www.oracle.com/java/technologies/downloads/).
+![Visitor Badge](https://visitor-badge.laobi.icu/badge?page_id=ZetaMap.moreCommands) ![Download](https://shields.io/github/downloads/ZetaMap/moreCommands/total)
 
-### Player Commands
-* `/ut [filter|username...]` The name of the unit.
-* `/vnw [number]` Vote for sending a New Wave.
-* `/maps [page]` List all maps on server.
-* `/info-all [ID|username...]` Get all player informations.
-* `/rtv [mapName...]` Rock the vote to change map.
-* `/rainbow [filter|ID|username...]` RAINBOW!!
-* `/msg <ID|username> <message...>` Send a private message to a player.
-* `/help [page|filter]` Recreate /help to display only commands related to your rank.
-* `/effect [list|name|id] [page|ID|username...]` Gives you a particle effect.
-* `/r <message...>` Reply to the last private message received.
-* `/lobby` Switch to lobby server.
-* `/switch <list|name...>` Switch to another server.
-- [ ] `/report <player> [reason...]` Report a player to staff.
+# More Commands plugin
+This plugin adds a bunch of commands (60+) to your server.
 
-### Admin Commands
-* `/team [~|teamname|list|vanish] [filter|username...]` Change team.
-* `/kick <filter|ID|username> [reason...]` Kick a person by name or ID.
-* `/pardon <ID>` Pardon a votekicked player by ID and allow them to join again.
-* `/ban <filter|username|ID> [reason...]`  Ban a person.
-* `/unban <ID>` Unban a person.
-* `/players <help|searchFilter> [page]` Display the list of players.
-* `/kill [filter|username...]` Kill a player.
-* `/tp <filter|name|x,y> [~|to_name|x,y...]` Teleport to a location or player.
-* `/core [small|medium|big] [teamName]` Build a core at your location.
-* `/chat [on|off]` Enabled/disabled the chat.
-* `/spawn <unit> [count] [filter|x,y|username] [teamName|~...]` Spawn a unit.
-* `/godmode [filter|username...]` [God]: I'm divine!
-* `/mute <filter|username|ID> [reason...]` Mute a person by name or ID.
-* `/unmute <filter|username|ID...>` Unmute a person by name or ID.
-* `/reset <filter|username|ID...>` Resets a player's game data (rainbow, GodMode, muted, ...).
-- [ ] `/freeze <filter|username|ID...>` Freeze a player.
-- [ ] `/reports <list|ok> [id]` Control the reports list
-
-### Server Commands
-* `auto-pause` Pause the game if no one is connected.
-* `chat [on|off]` Enabled/disabled the chat.
-* `nice-welcome` Nice welcome for me.
-* `commands <list|commandName> [on|off]` Enable/Disable a command. /!\\Requires server restart to apply changes.
-* `clear-map [y|n]` Kill all units and destroy all blocks except cores, on the current map.
-* `gamemode [name]` Change the gamemode of the current map.
-* ~~`blacklist <list|add|remove|clear> <name|ip> [value...]` Players using a nickname or ip in the blacklist cannot connect.~~ __Use [this plugin instead](https://github.com/xpdustry/Simple-Blacklist).__
-* `anti-vpn [on|off|token] [your_token]` Anti VPN service.
-* `filters <help|on|off>` Enabled/disabled filters.
-* `effect <list|on|off> [id|name]` Enabled/disabled a particles effect.
-* `switch <help|list|add|remove|clear> [name] [ip] [onlyAdmin]` Configure the list of servers in the switch.
-* `tag <help|arg0> [ID|] [tagName...]` Configure the tag system.
-* `ban <list|add|remove|reset> [type-id|ip] [ID|IP] [reason...]` List all banned IP/ID or ban/unban an ID/IP.
-* `alogs [on|off|reset] [y|n]` Configure admins logs.
-* `fillitems [team|all] [items...]` Fill the core with the selected item.
-- [ ] `warn [ID] [message...]` Display a pop-up message to warn the player.
-- [ ] `reports <list|ok|clear> [id]` Control the reports list
-- [ ] `reset [ID]` Reset all data of the player (ips, names, ban, ...).
-
-### Feedback
-Open an issue if you have a suggestion.
-
-### Releases
-Prebuild releases can be found [here](https://github.com/ZetaMap/moreCommands/releases) 
-
-### Building a Jar 
-You have just run `build.bat` and the plugin will compile automatically.
+> [!IMPORTANT]
+> This plugin requires Java 12 or higher. <br>
+> To download Java 12, follow steps [here](https://www.oracle.com/fr/java/technologies/javase/jdk12-archive-downloads.html) or [here](https://www.oracle.com/java/technologies/downloads/) to download the latest version.
 
 
-### Installing
-Simply place the output jar from the step above in your server's `config/mods` directory and restart the server.
-List your currently installed plugins by running the `mods` command.
+## <a name="player-commands">Player commands *(total: 14)*</a>
+*  ``/help [command|page]`` - Lists all commands or selector examples.
+*  ``/w <player> <message...>`` - Whisper to a player.
+*  ``/r <message...>`` - Reply to the last whispered message.
+*  ``/votekick [player] [reason...]`` - Vote to kick a player with a valid reason.
+*  ``/vote <y|n|c>`` - Vote to kick the current player. Admins can cancel the vote with *'c'*.
+*  ``/maps [page]`` - List all maps of the server.
+*  ``/vnw [y|n|c|f|number]`` - Vote for sending a new wave.
+*  ``/rtv [y|n|c|f|mapName...]`` - Vote to change the map.
+*  ``/rainbow [on|off] [selector|player...]`` - RAINBOW!!
+*  ``/effect [stop|list|search|name|id] [page|selector|player...]`` - Gives you a particle effect.
+*  ``/hub`` - Connect you to the hub server. Shortcut of *'/switch hub'*.
+*  ``/switch [name|alias...]`` - Connect you to another server.
+*  ``/sync [selector|player...]`` - Re-synchronize world state of a player.
+*  ``/pinfo [uuid|nickname...]`` - Get all player informations.
 
-### Thanks to...
-J-VdS - [TeamPlugin](https://github.com/J-VdS/TeamPlugin)<br>
-Phinner - [BetterCommands](https://github.com/Phinner/BetterCommands)<br>
-Shadow53 - [MindustryAdminPlugin](https://github.com/Shadow53/MindustryAdminPlugin)<br>
-mayli - [RockTheVotePlugin](https://github.com/mayli/RockTheVotePlugin)<br>
-OceanPandorum - [PandorumPlugin](https://github.com/OceanPandorum/PandorumPlugin)<br>
-Mindurka - [spawnUnit](https://github.com/Mindurka/spawnUnit)
+## <a name="admin-commands">Admin commands *(total: 25)*</a>
+*  ``/chat [on|off]`` - Toggle the chat.
+*  ``/tag [page|set|remove] [UUID] [tag...]`` - Configure the tag system.
+*  ``/team [teamName|vanish|~] [player|selector...]`` - Change team.
+*  ``/tp <player|selector|src-x,y> [player|dest-x,y...]`` - Teleport to a location or player.
+*  ``/place <blockName> [player|x,y] [teamName|~] [buildData...]`` - Place a block.
+*  ``/fill <blockName> <player|src-x,y> <player|dest-x,y> [teamName|~] [buildData...]`` - Fill a zone.
+*  ``/core <small|medium|big|coreName> [player|x,y] [teamName|~...]`` - Build a core.
+*  ``/spawn <unit> [count] [player|x,y] [teamName|~] [unitData...]`` - Spawn a unit.
+*  ``/transform <unit> [player|selector] [unitData...]`` - Transform a player unit.
+*  ``/kill [player|selector...]`` - Kill a player or a unit.
+*  ``/clear-map [hard|y|n]`` - Kill all units and blocks, except cores, on the map.
+*  ``/weather [clear|weatherName] [intensity] [inf|duration]`` - Control map weather.
+*  ``/fillitems [team|all] [items...]`` - Fill the core of the specified or all teams, with the selected or all items.
+*  ``/gamemode [name]`` - Change the current map gamemode.
+*  ``/pause <on|off>`` - Toggle the game state.
+*  ``/godmode [on|off] [player|selector...]`` - **[God]:** I'm divine!
+*  ``/ban <player|uuid|ip|selector> [time] [reason...]`` - Ban a player.
+*  ``/unban <uuid|ip> [reason...]`` - Unban a player.
+*  ``/kick <player|uuid|selector> [time] [reason...]`` - Kick a player.
+*  ``/warn <player|uuid|selector> <reason...>`` - Warn a player.
+*  ``/mute <player|uuid|selector> [time] [reason...]`` - Mute a player.
+*  ``/unmute <player|uuid|selector> [reason...]`` - Unmute a player.
+*  ``/freeze <player|uuid|selector> [time] [reason...]`` - Freeze a player.
+*  ``/unfreeze <player|uuid|selector> [reason...]`` - Unfreeze a player.
+*  ``/pardon <uuid|punishmentId> [reason...]`` - Pardon a player or a punishment.
+
+## <a name="server-commands">Server commands *(total: 23)*</a>
+*  ``morecommands [on|off|reload|save] [moduleName]`` - Manage the MoreCommands modules. Requires a server restart to apply the changes.
+*  ``commands [reset|on|off] [command] [now]`` - Toggle client/server commands.
+*  ``chat [on|off]`` - Toggle the in-game chat.
+*  ``tag [on|off|set|remove] [UUID] [tag...]`` - Configure the tag system.
+*  ``effect [reset|id|name] [on|off|admins|everyone]`` - Manage the particles effects.
+*  ``switch [help|arg0] [args...]`` - Configures the switch system. Use *'switch help'* for usage.
+*  ``restart`` - Reconnects players and exits the server with code *'2'*, to ask a restart from the launcher script.
+*  ``speed [value]`` - Control the game speed. **USE WITH CAUTION!**
+*  ``fillitems [team|all] [items...]`` - Fill the core of the specified or all teams, with the selected or all items.
+*  ``gamemode [name]`` - Change the current map gamemode.
+*  ~~`blacklist <list|add|remove|clear> <name|ip> [value...]` Players using a nickname or ip in the blacklist cannot connect.~~ <br>
+   **Use [this plugin](https://github.com/xpdustry/simple-blacklist) instead. (the current configuration will be migrated automatically if the plugin is present)**
+*  ~~`anti-vpn [on|off|token] [your_token]` Anti VPN service.~~ <br>
+   **Use [this plugin](https://github.com/xpdustry/anti-vpn-service) instead. (the current configuration will be migrated automatically if the plugin is present)**
+*  ``bans [all]`` - List all banned players and IPs.
+*  ``ban <player|uuid|ip|selector> [time] [reason...]`` - Ban a player.
+*  ``unban <uuid|ip> [reason...]`` - Unban a player.
+*  ``kick <player|uuid|selector> [time] [reason...]`` - Kick a player.
+*  ``warn <player|uuid|selector> <reason...>`` - Warn a player.
+*  ``mute <player|uuid|selector> [time] [reason...]`` - Mute a player.
+*  ``unmute <player|uuid|selector> [reason...]`` - Unmute a player.
+*  ``freeze <player|uuid|selector> [time] [reason...]`` - Freeze a player.
+*  ``unfreeze <player|uuid|selector> [reason...]`` - Unfreeze a player.
+*  ``pardon <uuid|punishmentId> [reason...]`` - Pardon a player or a punishment.
+*  ``punishments [type|uuid|ip] [all|type]`` - View all or a player punishments.
+*  ``reserved-names [on|off|add|remove|message] [name|text...]`` - Reserved nicknames can only be used by admins.
+*  ``anti-evade [clear|minutes]`` - Control the anti evade system.
+
+
+## Building
+Pre-build releases can be found [here](https://github.com/ZetaMap/moreCommands/releases).<br>
+Or you can build it yourself by running ``./gradlew build``. The file will be named ``more-commands.jar``
+
+
+## Documentation
+### Selectors
+**TODO**
