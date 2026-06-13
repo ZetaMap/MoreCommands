@@ -83,7 +83,7 @@ public class Players {
   public static SearchResult findByID(String[] args, int from, int to) { 
     if (args.length == 0 || from < 0 || to > args.length || from >= to) return new SearchResult(null, args);
     if (args[from].length() < 2 || args[from].charAt(0) != '#') return new SearchResult(null, copyIfNeeded(args, from, to));
-    int id = Strings.parseInt(args[0], 10, Integer.MIN_VALUE, 1, args.length);
+    int id = Strings.parseInt(args[from], 10, Integer.MIN_VALUE, 1, args[from].length());
     return id == Integer.MIN_VALUE ? new SearchResult(null, copyIfNeeded(args, from, to)) :
            new SearchResult(PlayerData.id(id), copyIfNeeded(args, from+1, to)); 
   }
