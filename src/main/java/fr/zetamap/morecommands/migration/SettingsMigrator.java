@@ -27,7 +27,7 @@ import mindustry.mod.Mods;
 import mindustry.net.Administration;
 
 import fr.zetamap.morecommands.Modules;
-import fr.zetamap.morecommands.module.ModuleFactory;
+import fr.zetamap.morecommands.module.ModuleRegistry;
 import fr.zetamap.morecommands.modules.effect.Effects;
 import fr.zetamap.morecommands.modules.security.Punishment;
 import fr.zetamap.morecommands.modules.security.PunishmentDuration;
@@ -198,8 +198,8 @@ public class SettingsMigrator {
     if (!isSelectorsMigrationNeeded()) return;
     
     if (Core.settings.has("ArgsFilter")) {
-      if (Core.settings.getBool("ArgsFilter")) ModuleFactory.enable(Modules.selector);
-      else ModuleFactory.disable(Modules.selector);
+      if (Core.settings.getBool("ArgsFilter")) ModuleRegistry.enable(Modules.selector);
+      else ModuleRegistry.disable(Modules.selector);
     }
     
     Core.settings.remove("ArgsFilter");

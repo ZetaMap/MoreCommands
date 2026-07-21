@@ -103,10 +103,9 @@ public class VotingModule extends AbstractModule {
         }
         
         StringBuilder builder = new StringBuilder("[orange]Players to kick: \n");
-
         PlayerData.each(p -> !p.admin() && p.player.con != null && p != player, p -> {
             builder.append(" [orange]- ").append(p.getName());
-            if (player.admin()) builder.append(" [orange]/ [lightgray]").append(p.shortUuid);
+            if (player.admin()) builder.append(" [orange]/ [lightgray]").append(p.player.uuid());
             builder.append(" [accent](#").append(p.player.id()).append(")[]\n");
         });
         Players.info(player, builder.toString());
@@ -179,7 +178,14 @@ public class VotingModule extends AbstractModule {
         case "y": case "yes": vnwSession.yes(player); break;
         case "n": case "no": vnwSession.no(player); break;
         case "c": case "cancel": vnwSession.cancel(player); break;
-        case "f": case "force": vnwSession.force(player); break;
+        case "f": case "force": 
+          if (vnwSession.started()) vnwSession.force(player);
+          else if (!player.admin()) Players.errArgUseDenied(player);
+          else {
+            vnwSession.skipCooldown();
+            Players.ok(player, "Cooldown skipped.");
+          }
+          break;
         default:
           int waves = Strings.parseInt(args[0]);
           if (waves == Integer.MIN_VALUE) {
@@ -205,7 +211,14 @@ public class VotingModule extends AbstractModule {
         case "y": case "yes": rtvSession.yes(player); break;
         case "n": case "no": rtvSession.no(player); break;
         case "c": case "cancel": rtvSession.cancel(player); break;
-        case "f": case "force": rtvSession.force(player); break;
+        case "f": case "force": 
+          if (rtvSession.started()) rtvSession.force(player);
+          else if (!player.admin()) Players.errArgUseDenied(player);
+          else {
+            rtvSession.skipCooldown();
+            Players.ok(player, "Cooldown skipped.");
+          }
+          break;
         default: rtvSession.start(player, args[0]);
       }
     });

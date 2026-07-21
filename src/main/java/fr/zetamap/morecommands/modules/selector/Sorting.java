@@ -19,28 +19,26 @@
 package fr.zetamap.morecommands.modules.selector;
 
 import arc.func.Cons2;
-import arc.math.Mathf;
 import arc.math.geom.Position;
 import arc.struct.Seq;
 
 import mindustry.gen.Unit;
 
 
+/** @see mindustry.entities.UnitSorts */
 public enum Sorting {
-  // mindustry.entities.UnitSorts
-  
   /** Sorts by nearest unit. */
   nearest((l, p) -> l.sort(u -> u.dst2(p))),
   /** Sorts by furthest unit. */
-  furthest((l, p) -> l.sort(u -> -u.dst(p))),
-  /** Sorts by the strongest unit. */
-  strongest((l, p) -> l.sort(u -> -u.maxHealth + Mathf.dst2(u.x, u.y, p.getX(), p.getY()) / 6400f)),
-  /** Sorts by the weakest unit. */
-  weakest((l, p) -> l.sort(u -> u.maxHealth + Mathf.dst2(u.x, u.y, p.getX(), p.getY()) / 6400f)),
+  furthest((l, p) -> l.sort(u -> -u.dst2(p))),
+  /** Sort by nearest unit and with the highest maximum health. */
+  strongest((l, p) -> l.sort(u -> -u.maxHealth + u.dst(p) / 6400f)),
+  /** Sort by nearest unit and with the lowest maximum health. */
+  weakest((l, p) -> l.sort(u -> u.maxHealth + u.dst(p) / 6400f)),
   /** Shuffle the list. */
   random((l, p) -> l.shuffle()),
   /** Sort by id. */
-  arbitrary((l, p) -> l.sort(u -> u.id)),
+  arbitrary((l, p) -> l.sort(u -> u.id)), //implicitly sorted by id?
 //  /** No sorting. */
 //  none((l, p) -> {}),
   ;

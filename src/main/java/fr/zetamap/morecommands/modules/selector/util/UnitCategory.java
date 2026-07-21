@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package fr.zetamap.morecommands.misc;
+package fr.zetamap.morecommands.modules.selector.util;
 
 import arc.func.Boolf;
 

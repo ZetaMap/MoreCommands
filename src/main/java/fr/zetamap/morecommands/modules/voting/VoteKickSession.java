@@ -18,19 +18,16 @@
 
 package fr.zetamap.morecommands.modules.voting;
 
-import mindustry.Vars;
-import mindustry.core.NetServer;
-import mindustry.gen.Call;
-
 import fr.zetamap.morecommands.Modules;
 import fr.zetamap.morecommands.PlayerData;
 import fr.zetamap.morecommands.misc.Players;
 import fr.zetamap.morecommands.modules.security.Punishment;
 import fr.zetamap.morecommands.util.DurationFormatter;
-import fr.zetamap.morecommands.util.Strings;
 
 
 public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> {
+  public long kickDuration = Punishment.Type.kick.defaultDuration.duration;
+  
   public VoteKickSession() {
     super(1 * 60, 2 * 60);
   }
@@ -41,7 +38,8 @@ public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> 
       return false;
     } else if (started()) {
       Players.err(player, "A vote to kick @ [scarlet]is already in progress!\n"
-                        + "[scarlet]Type [orange]/vote y[] or [orange]/vote n[] to agree or not.", objective().target.getName());
+                        + "[scarlet]Type [orange]/vote y[] or [orange]/vote n[] to agree or not.", 
+                  objective().target.getName());
       return false;
     
     } else if (reason != null) {
@@ -54,7 +52,7 @@ public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> 
       } else if (player.player.team() != reason.target.player.team()) {
         Players.err(player, "Only players on your team can be kicked.");
         return false;
-      } else if (!Vars.state.rules.pvp && 
+      } else if (!mindustry.Vars.state.rules.pvp && 
                  PlayerData.count(p -> player.player.team() == objective().target.player.team()) < 3) {
         Players.err(player, "At least 3 players from your own team are needed to start a votekick.");
         return false;
@@ -96,7 +94,7 @@ public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> 
     return true;
   }
   
-  /** Vote cannot be forced by an admin or other. */
+  /** Vote cannot be forced. */
   public void force(PlayerData by) {
     Players.err(by, "The vote cannot be forced, kick the player yourself instead.");
   }
@@ -110,69 +108,65 @@ public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> 
   
   public void punishTarget() {
     Context o = objective();
-    Modules.punishments.punish(o.by, o.target, Punishment.Type.votekick, NetServer.kickDuration * 1000, o.reason);
+    Modules.punishments.punish(o.by, o.target, Punishment.Type.votekick, kickDuration, o.reason);
   }
 
   @Override
   protected void sessionStarted(PlayerData by) {
-    int remaining = required() - votes();
-    String vote = remaining == 1 ? "vote is" : "votes are";
-    Call.sendMessage(
-      Strings.format("@[lightgray] started a vote to kick @[lightgray].\n"
-                   + "[accent]@[white] more @ required [gray]([lightgray]@[]/[lightgray]@[])[]."
-                   + "Type [orange]/vote y[] or [orange]/vote n[] to agree or not.\n"
-                   + "[lightgray]Reason: [orange]@[lightgray].", 
-                     by.getName(), objective().target.getName(), remaining, vote, votes(), required(), objective().reason));
+    String vote = remaining() == 1 ? "vote is" : "votes are";
+    Modules.messaging.serverInfo("VoteKick", "@ [lightgray]started a vote to kick @[lightgray].\n"
+                                           + "@ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. "
+                                           + "Type [orange]/vote y[] or [orange]/vote n[] to agree or not.\n"
+                                           + "[lightgray]Reason: [orange]@[lightgray].",
+                                 by.getName(), objective().target.getName(), remaining(), "[]"+vote, "[]"+votes(), 
+                                 "[]"+required(), "[]"+objective().reason);
   }
 
   @Override
   protected void sessionPassed() {
-    Call.sendMessage(Strings.format("[orange]Vote passed. @[orange] will be kicked from the server.\n"
-                                  + "[lightgray]Reason: [orange]@[lightgray].", 
-                                    objective().target.getName(), objective().reason));
+    Modules.messaging.serverWarn("VoteKick", "Vote passed. @ will be kicked from the server.\n"
+                                           + "[lightgray]Reason: [orange]@[lightgray].", 
+                                 objective().target.getName(), "[]"+objective().reason);
     punishTarget();
   }
 
   @Override
   protected void sessionForced(PlayerData by) {
-    Call.sendMessage(Strings.format("[orange]Vote skipped by @. @[orange] will be kicked from the server.\n"
-                                  + "[lightgray]Reason: [orange]@[lightgray].", 
-                                    by.getName(), objective().target.getName(), objective().reason));
+    Modules.messaging.serverWarn("VoteKick", "Vote skipped by @. @ will be kicked from the server.\n"
+                                           + "[lightgray]Reason: [orange]@[lightgray].",
+                                 by.getName(), objective().target.getName(), "[]"+objective().reason);
     punishTarget();
   }
   
   @Override
   protected void sessionFailed() {
-    Call.sendMessage(Strings.format("[lightgray]Vote failed! Not enough votes to kick[orange] @[lightgray].", 
-                                    objective().target.getName()));
+    Modules.messaging.serverInfo("VoteKick", "[lightgray]Vote failed! Not enough votes to kick [orange]@[lightgray].",
+                                 "[]"+objective().target.getName());
     Players.info(objective().target, "[sky]You are no longer involved in a vote kick, you have been unfrozen.");
   }
 
   @Override
   protected void sessionCanceled(PlayerData by) {
-    Call.sendMessage(Strings.format("[scarlet]VoteKick: [orange] Vote cancelled by @[orange].", by.getName()));
+    Modules.messaging.serverWarn("VoteKick", "Vote cancelled by @.", by.getName());
     Players.info(objective().target, "[sky]You are no longer involved in a vote kick, you have been unfrozen.");
   }
 
   @Override
   protected void sessionVote(PlayerData who, VoteType type) {
-    int remaining = required() - votes();
-    String vote = remaining == 1 ? "vote is" : "votes are";
-    Call.sendMessage(
-      Strings.format("[lightgray]@[lightgray] voted to @kick @[lightgray].\n"
-                   + "[accent]@[white] more @ required [gray]([lightgray]@[]/[lightgray]@[])[]."
-                   + "Type [orange]/vote y[] or [orange]/vote n[] to agree or not with him.", 
-                     who.getName(), type.yes() ? "" : "not ", objective().target.getName(), remaining, vote, votes(), 
-                     required()));
+    String vote = remaining() == 1 ? "vote is" : "votes are";
+    Modules.messaging.serverInfo("VoteKick", "@ [lightgray]voted to @[lightgray]kick @[lightgray].\n"
+                                           + "@ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. "
+                                           + "Type [orange]/vote y[] or [orange]/vote n[] to agree or not with him.", 
+                                 who.getName(), type.yes() ? "[]" : "[]not ", objective().target.getName(), "[]"+vote, 
+                                 "[]"+votes(), "[]"+required());
   }
 
   @Override
   protected void sessionVoteRemoved(PlayerData who) {
-    int remaining = required() - votes();
-    String vote = remaining == 1 ? "vote is" : "votes are";
-    Call.sendMessage(Strings.format("[scarlet]VoteKick: @ [orange]left the game, [accent]@[white] more @ now required "
-                                  + "[gray]([lightgray]@[]/[lightgray]@[])[].", 
-                                    who.getName(), remaining, vote, votes(), required()));
+    String vote = remaining() == 1 ? "vote is" : "votes are";
+    Modules.messaging.serverInfo("VoteKick", "@ [orange]left the game[], @ more @ now required "
+                                           + "[gray]([lightgray]@[gray]/[lightgray]@[gray])[white].", 
+                                 who.getName(), remaining(), "[]"+vote, "[]"+votes(), "[]"+required());
   }
 
   

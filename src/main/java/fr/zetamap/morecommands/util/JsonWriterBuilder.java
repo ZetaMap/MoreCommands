@@ -30,6 +30,7 @@ import arc.util.pooling.Pool.Poolable;
 import arc.util.serialization.BaseJsonWriter;
 import arc.util.serialization.JsonValue;
 import arc.util.serialization.JsonValue.ValueType;
+import arc.util.serialization.JsonWriter.OutputType;
 
 
 /** Build a JsonValue object */
@@ -45,7 +46,7 @@ public class JsonWriterBuilder implements BaseJsonWriter, Poolable {
   
   @Override
   /** No-op */
-  public void setOutputType(arc.util.serialization.JsonWriter.OutputType outputType) {}
+  public void setOutputType(OutputType outputType) {}
 
   @Override
   /** No-op */

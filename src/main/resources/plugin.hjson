@@ -4,7 +4,7 @@ author: ZetaMap
 main: fr.zetamap.morecommands.Main
 description: This mindustry plugin adds a bunch of commands (60+) to your server.
 version: "v12"
-minGameVersion: "151"
+minGameVersion: "159.6"
 java: true
 hidden: true
 repo: ZetaMap/MoreCommands

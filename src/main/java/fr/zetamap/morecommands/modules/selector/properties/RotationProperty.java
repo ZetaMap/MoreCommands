@@ -23,10 +23,10 @@ import arc.math.geom.Vec2;
 import mindustry.gen.Player;
 import mindustry.gen.Unit;
 
-import fr.zetamap.morecommands.misc.Range;
-import fr.zetamap.morecommands.misc.RangeParser;
 import fr.zetamap.morecommands.modules.selector.Selector;
 import fr.zetamap.morecommands.modules.selector.SelectorProperty;
+import fr.zetamap.morecommands.modules.selector.util.Range;
+import fr.zetamap.morecommands.modules.selector.util.RangeParser;
 import fr.zetamap.morecommands.util.StringReader;
 
 

@@ -1,17 +1,17 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
- * Copyright (c) 2021-2025  ZetaMap
- * 
+ * Copyright (c) 2021-2026  ZetaMap
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -42,8 +42,8 @@ public class Server {
   public Server(String name, String address) throws IllegalArgumentException {
     this(name, null, null, address, false);
   }
-  
-  public Server(String name, @Nullable String alias, @Nullable String displayName, String address, boolean admin) 
+
+  public Server(String name, @Nullable String alias, @Nullable String displayName, String address, boolean admin)
   throws IllegalArgumentException {
     this.name = name;
     this.alias = alias;
@@ -55,7 +55,7 @@ public class Server {
   public Server(String name, String ip, int port) {
     this(name, null, null, ip, port, false);
   }
-  
+
   public Server(String name, @Nullable String alias, @Nullable String displayName, String ip, int port, boolean admin) {
     this.name = name;
     this.alias = alias;
@@ -64,7 +64,7 @@ public class Server {
     this.port = port;
     this.adminOnly = admin;
   }
-  
+
   public String alias() { return alias; }
   public String displayName() { return displayName; }
   public String ip() { return ip; }
@@ -77,12 +77,12 @@ public class Server {
     String i = address;
     int p = Vars.port;
     boolean isIpv6 = Strings.count(address, ':') > 1;
-    
+
     if (isIpv6 && address.lastIndexOf("]:") != -1 && address.lastIndexOf("]:") != address.length()-1) {
       int idx = address.indexOf("]:");
       i = address.substring(1, idx);
       p = Strings.parseInt(address.substring(idx + 2));
-    } else if (!isIpv6 && address.lastIndexOf(':') != -1 && address.lastIndexOf(':') != address.length()-1){ 
+    } else if (!isIpv6 && address.lastIndexOf(':') != -1 && address.lastIndexOf(':') != address.length()-1){
       int idx = address.lastIndexOf(':');
       i = address.substring(0, idx);
       p = Strings.parseInt(address.substring(idx+1));
@@ -95,18 +95,18 @@ public class Server {
       i = address;
       p = Vars.port;
     }
-    
+
     this.ip = i;
     this.port = p;
   }
-  
+
   /** @return {@link #ip}{@code :}{@link #port}. */
   public String address() {
     // From {@link mindustry.ui.dialogs.JoinDialog.Server#displayIP()}.
-    return ip.indexOf(':') != -1 ? port != Vars.port ? '[' + ip + "]:" + port : ip : 
+    return ip.indexOf(':') != -1 ? port != Vars.port ? '[' + ip + "]:" + port : ip :
            port != Vars.port ? ip + ':' + port : ip;
   }
-  
+
   public void ping() {
     ping(null, null);
   }
@@ -115,7 +115,7 @@ public class Server {
     // Ignore if a ping is already scheduled
     if (pingScheduled) return;
     pingScheduled = true;
-    
+
     Vars.net.pingHost(ip, port, h -> Core.app.post(() -> {
       info = h;
       pingScheduled = false;
@@ -130,10 +130,9 @@ public class Server {
   public void connect(Player player, Cons<PreConnect.Availability> status) {
     PreConnect.Availability pre = PreConnect.verify(player.admin, this);
     status.get(pre);
-    if (pre.ok()) {
-      // Prefer information from ping when possible
-      if (info == null) Call.connect(player.con, ip, port);
-      else Call.connect(player.con, info.address, info.port);
-    }
+    if (!pre.ok()) return;
+    // Prefer information from ping when possible
+    if (info == null) Call.connect(player.con, ip, port);
+    else Call.connect(player.con, info.address, info.port);
   }
 }

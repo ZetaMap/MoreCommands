@@ -4,8 +4,8 @@
 This plugin adds a bunch of commands (60+) to your server.
 
 > [!IMPORTANT]
-> This plugin requires Java 12 or higher. <br>
-> To download Java 12, follow steps [here](https://www.oracle.com/fr/java/technologies/javase/jdk12-archive-downloads.html) or [here](https://www.oracle.com/java/technologies/downloads/) to download the latest version.
+> This plugin requires Java 17 or higher. <br>
+> To download Java 17, follow steps [here](https://www.oracle.com/fr/java/technologies/javase/jdk17-archive-downloads.html) or steps [here](https://www.oracle.com/java/technologies/downloads/) for the latest version.
 
 
 ## <a name="player-commands">Player commands *(total: 14)*</a>
@@ -41,13 +41,13 @@ This plugin adds a bunch of commands (60+) to your server.
 *  ``/gamemode [name]`` - Change the current map gamemode.
 *  ``/pause <on|off>`` - Toggle the game state.
 *  ``/godmode [on|off] [player|selector...]`` - **[God]:** I'm divine!
-*  ``/ban <player|uuid|ip|selector> [time] [reason...]`` - Ban a player.
+*  ``/ban <player|uuid|ip|selector> [time|default] [reason...]`` - Ban a player.
 *  ``/unban <uuid|ip> [reason...]`` - Unban a player.
-*  ``/kick <player|uuid|selector> [time] [reason...]`` - Kick a player.
+*  ``/kick <player|uuid|selector> [time|default] [reason...]`` - Kick a player.
 *  ``/warn <player|uuid|selector> <reason...>`` - Warn a player.
-*  ``/mute <player|uuid|selector> [time] [reason...]`` - Mute a player.
+*  ``/mute <player|uuid|selector> [time|default] [reason...]`` - Mute a player.
 *  ``/unmute <player|uuid|selector> [reason...]`` - Unmute a player.
-*  ``/freeze <player|uuid|selector> [time] [reason...]`` - Freeze a player.
+*  ``/freeze <player|uuid|selector> [time|default] [reason...]`` - Freeze a player.
 *  ``/unfreeze <player|uuid|selector> [reason...]`` - Unfreeze a player.
 *  ``/pardon <uuid|punishmentId> [reason...]`` - Pardon a player or a punishment.
 
@@ -62,18 +62,19 @@ This plugin adds a bunch of commands (60+) to your server.
 *  ``speed [value]`` - Control the game speed. **USE WITH CAUTION!**
 *  ``fillitems [team|all] [items...]`` - Fill the core of the specified or all teams, with the selected or all items.
 *  ``gamemode [name]`` - Change the current map gamemode.
+*  ``mod <on|off|name> [name...]`` - Toggle a mod or display information about a loaded one.
 *  ~~`blacklist <list|add|remove|clear> <name|ip> [value...]` Players using a nickname or ip in the blacklist cannot connect.~~ <br>
    **Use [this plugin](https://github.com/xpdustry/simple-blacklist) instead. (the current configuration will be migrated automatically if the plugin is present)**
 *  ~~`anti-vpn [on|off|token] [your_token]` Anti VPN service.~~ <br>
    **Use [this plugin](https://github.com/xpdustry/anti-vpn-service) instead. (the current configuration will be migrated automatically if the plugin is present)**
 *  ``bans [all]`` - List all banned players and IPs.
-*  ``ban <player|uuid|ip|selector> [time] [reason...]`` - Ban a player.
+*  ``ban <player|uuid|ip|selector> [time|default] [reason...]`` - Ban a player.
 *  ``unban <uuid|ip> [reason...]`` - Unban a player.
-*  ``kick <player|uuid|selector> [time] [reason...]`` - Kick a player.
+*  ``kick <player|uuid|selector> [time|default] [reason...]`` - Kick a player.
 *  ``warn <player|uuid|selector> <reason...>`` - Warn a player.
-*  ``mute <player|uuid|selector> [time] [reason...]`` - Mute a player.
+*  ``mute <player|uuid|selector> [time|default] [reason...]`` - Mute a player.
 *  ``unmute <player|uuid|selector> [reason...]`` - Unmute a player.
-*  ``freeze <player|uuid|selector> [time] [reason...]`` - Freeze a player.
+*  ``freeze <player|uuid|selector> [time|default] [reason...]`` - Freeze a player.
 *  ``unfreeze <player|uuid|selector> [reason...]`` - Unfreeze a player.
 *  ``pardon <uuid|punishmentId> [reason...]`` - Pardon a player or a punishment.
 *  ``punishments [type|uuid|ip] [all|type]`` - View all or a player punishments.

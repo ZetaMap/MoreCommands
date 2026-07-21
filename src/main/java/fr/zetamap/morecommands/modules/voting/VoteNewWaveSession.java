@@ -18,13 +18,10 @@
 
 package fr.zetamap.morecommands.modules.voting;
 
-import mindustry.Vars;
-import mindustry.gen.Call;
-
+import fr.zetamap.morecommands.Modules;
 import fr.zetamap.morecommands.PlayerData;
 import fr.zetamap.morecommands.misc.Players;
 import fr.zetamap.morecommands.util.DurationFormatter;
-import fr.zetamap.morecommands.util.Strings;
 
 
 public class VoteNewWaveSession extends PlayerVoteSession<Integer> {
@@ -83,67 +80,59 @@ public class VoteNewWaveSession extends PlayerVoteSession<Integer> {
     return PlayerData.size() / 2 + 1;
   }
 
-  /** 
-   * Skip the waves. <br>
-   * Note that doesn't just increases the wave number, it runs them.
-   */
+  /** Skip the waves. This doesn't just increases the wave number, it runs them. */
   public void skipWaves() {
     int waves = objective();
-    while (waves-- > 0) Vars.logic.skipWave();
+    while (waves-- > 0) mindustry.Vars.logic.skipWave();
   }
   
   @Override
   protected void sessionStarted(PlayerData by) {
-    int remaining = required() - votes();
-    String vote = remaining == 1 ? "vote is" : "votes are";
-    Call.sendMessage(
-      Strings.format("[scarlet]VNW: @ [white] started a vote to run [accent]@[].\n"
-                   + "[scarlet]VNW: [accent]@[white] more @ required [gray]([lightgray]@[]/[lightgray]@[])[]. "
-                   + "Type [orange]/vnw y[] or [orange]/vnw n[] to agree or not.",
-                     by.getName(), stringObjective(), remaining, vote, votes(), required()));
+    String vote = remaining() == 1 ? "vote is" : "votes are";
+    Modules.messaging.serverInfo("VNW", "@ started a vote to run @.\n"
+                                      + "@ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. "
+                                      + "Type [orange]/vnw y[] or [orange]/vnw n[] to agree or not.",
+                                 by.getName(), stringObjective(), remaining(), "[]"+vote, "[]"+votes(), "[]"+required());
   }
 
   @Override
   protected void sessionPassed() {
-    Call.sendMessage(Strings.format("[scarlet]VNW:[green] Vote passed, [accent]@[] will start soon.", stringObjective()));
+    Modules.messaging.serverOk("VNW", "Vote passed, @ will start soon.", stringObjective());
     skipWaves();
   }
 
   @Override
   protected void sessionForced(PlayerData by) {
-    Call.sendMessage(Strings.format("[scarlet]VNW:[green] Vote skipped by @[green], [accent]@[] will start soon.", 
-                                    by.getName(), stringObjective()));
+    Modules.messaging.serverOk("VNW", "Vote skipped by @, @ will start soon.", by.getName(), stringObjective());
     skipWaves();
   }
   
   @Override
   protected void sessionFailed() {
-    Call.sendMessage(Strings.format("[scarlet]VNW: Vote failed![] Not enough votes to run [accent]@[].", stringObjective()));
+    Modules.messaging.serverInfo("VNW", "[scarlet]Vote failed![] Not enough votes to run @.", stringObjective());
   }
 
   @Override
   protected void sessionCanceled(PlayerData by) {
-    Call.sendMessage(Strings.format("[scarlet]VNW:[orange] Vote cancelled by @[orange].", by.getName()));
+    Modules.messaging.serverWarn("VNW", "Vote cancelled by @.", by.getName());
   }
 
   @Override
   protected void sessionVote(PlayerData who, VoteType type) {
-    int remaining = required() - votes();
-    String vote = remaining == 1 ? "vote is" : "votes are";
-    Call.sendMessage(
-      Strings.format("[scarlet]VNW: @ [white] voted to @run [accent]@[white].\n"
-                   + "[scarlet]VNW: [accent]@[white] more @ required [gray]([lightgray]@[]/[lightgray]@[])[]."
-                   + "Type [orange]/vnw y[] or [orange]/vnw n[] to agree or not with him.",
-                     who.getName(), type.yes() ? "" : "not ", stringObjective(), remaining, vote, votes(), required()));
+    String vote = remaining() == 1 ? "vote is" : "votes are";
+    Modules.messaging.serverInfo("VNW", "@ voted to @run @.\n"
+                                      + "@ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. "
+                                      + "Type [orange]/vnw y[] or [orange]/vnw n[] to agree or not with him.", 
+                                 who.getName(), type.yes() ? "[]" : "[]not ", stringObjective(), "[]"+vote, 
+                                 "[]"+votes(), "[]"+required());
   }
 
   @Override
   protected void sessionVoteRemoved(PlayerData who) {
-    int remaining = required() - votes();
-    String vote = remaining == 1 ? "vote is" : "votes are";
-    Call.sendMessage(Strings.format("[scarlet]VNW: @ [orange]left the game, [accent]@[white] more @ now required "
-                                  + "[gray]([lightgray]@[]/[lightgray]@[])[].",
-                                    who.getName(), remaining, vote, votes(), required()));
+    String vote = remaining() == 1 ? "vote is" : "votes are";
+    Modules.messaging.serverInfo("VNW", "@ [orange]left the game[], @ more @ now required "
+                                      + "[gray]([lightgray]@[gray]/[lightgray]@[gray])[white].", 
+                                 who.getName(), remaining(), "[]"+vote, "[]"+votes(), "[]"+required());
   }
   
   protected String stringObjective() {
