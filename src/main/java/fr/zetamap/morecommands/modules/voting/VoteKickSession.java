@@ -53,7 +53,7 @@ public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> 
         Players.err(player, "Only players on your team can be kicked.");
         return false;
       } else if (!mindustry.Vars.state.rules.pvp && 
-                 PlayerData.count(p -> player.player.team() == objective().target.player.team()) < 3) {
+                 PlayerData.count(p -> p.player.team() == reason.target.player.team()) < 3) {
         Players.err(player, "At least 3 players from your own team are needed to start a votekick.");
         return false;
       }
