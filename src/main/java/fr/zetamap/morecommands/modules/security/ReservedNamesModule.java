@@ -1,6 +1,6 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
- * Copyright (c) 2025  ZetaMap
+ * Copyright (c) 2025-2026  ZetaMap
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ public class ReservedNamesModule extends AbstractSaveableModule {
   private boolean enabled;
   private String message;
 
+  public final Seq<String> defaultReserved = Seq.with("server", "admin", "owner", "creator");
   public final Seq<String> names = new Seq<>();
 
   public boolean add(String name) {
@@ -48,7 +49,7 @@ public class ReservedNamesModule extends AbstractSaveableModule {
 
   public boolean isReserved(String name) {
     name = clean(name);
-    return names.contains(name::contains);
+    return defaultReserved.contains(name::contains) || names.contains(name::contains);
   }
 
   /** Removes colors, glyphs, and lower the case. */
@@ -103,6 +104,7 @@ public class ReservedNamesModule extends AbstractSaveableModule {
     settings.put("names", String.class, names);
   }
 
+  @Override
   public void registerServerCommands(ServerCommandHandler handler) {
     handler.add("reserved-names", "[on|off|add|remove|message] [name|text...]", "Reserved nicknames can only be used by admins.",
     args -> {
@@ -115,6 +117,7 @@ public class ReservedNamesModule extends AbstractSaveableModule {
           logger.info("Reserved Nicknames: [@, total: @]", enabled ? "&fb&lgenabled&fr" : "&fb&lrdisabled&fr", names.size);
           names.each(n -> logger.info("&lk|&fr @", n));
         }
+        defaultReserved.each(n -> logger.info("&lk|&fr &fb&lg@", n)); //TODO: display them better?
 
       } else if (args[0].equals("add")) {
         if (args.length == 1) logger.err("Missing 'name' argument.");

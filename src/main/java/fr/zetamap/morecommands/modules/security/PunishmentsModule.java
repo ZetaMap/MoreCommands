@@ -235,8 +235,8 @@ public class PunishmentsModule extends AbstractSaveableModule {
     return currentPunishment;
   }
 
-  private Punishment punish(PlayerData author, String target, PlayerData player, String address, Punishment.Type type,
-                            long duration,  String reason) {
+  protected Punishment punish(PlayerData author, String target, PlayerData player, String address, Punishment.Type type,
+                              long duration,  String reason) {
     // Try to find a match in the server settings using the address, if target is not specified.
     if (target == null) {
       Seq<Administration.PlayerInfo> found = Vars.netServer.admins.findByIPs(address);

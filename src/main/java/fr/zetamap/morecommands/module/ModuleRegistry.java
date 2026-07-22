@@ -73,7 +73,7 @@ public class ModuleRegistry {
   protected static JsonSettings mSettings() {
     if (modulesSettings == null) {
       modulesSettings = new JsonSettings(configFile, configFile.parent().child("backup").child(configFile.name()));
-      modulesSettings.load();
+      if (modulesSettings.load()) modulesSettings.backup();
     }
     return modulesSettings;
   }
@@ -203,7 +203,7 @@ public class ModuleRegistry {
    * {@link #init()}.
    */
   public static void preInit() {
-    mSettings().backup(); // Ensure modules settings are loaded
+    mSettings(); // Ensure modules settings are loaded
     // Add a listener to dispose modules
     Core.app.addListener(new ApplicationListener() {
       public void dispose() {

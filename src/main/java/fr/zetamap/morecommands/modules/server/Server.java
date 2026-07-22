@@ -135,4 +135,15 @@ public class Server {
     if (info == null) Call.connect(player.con, ip, port);
     else Call.connect(player.con, info.address, info.port);
   }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "["
+         + "name=\"" + name + "\", "
+         + (alias != null ? "alias=\"" + alias + "\", " : "")
+         + (displayName != null ? "displayName=\"" + displayName + "\", " : "")
+         + "address=\"" + address() + "\", "
+         + "admin=" + (adminOnly ? "yes" : "no")
+         + "]";
+  }
 }

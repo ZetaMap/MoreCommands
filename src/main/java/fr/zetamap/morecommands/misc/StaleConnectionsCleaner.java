@@ -24,6 +24,7 @@ import arc.struct.ObjectSet;
 import arc.util.Reflect;
 
 import mindustry.Vars;
+import mindustry.net.ArcNetProvider;
 import mindustry.net.Packets.ConnectPacket;;
 
 /**
@@ -34,7 +35,7 @@ public class StaleConnectionsCleaner implements NetListener {
   public static void init() {
     // Use reflection to add a new listener to the Mindustry server
     //TODO: adjust timeout
-    init(Reflect.get(Reflect.get(Vars.net, "provider"), "server"), 10 * 1000L, ConnectPacket.class);
+    init(Reflect.get(Reflect.<ArcNetProvider>get(Vars.net, "provider"), "server"), 10 * 1000L, ConnectPacket.class);
   }
 
   /**

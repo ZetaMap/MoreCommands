@@ -38,12 +38,9 @@ public class SelectorModule extends AbstractModule {
     return ModuleRegistry.enabled(this);
   }
 
-  public void enable() {
-    ModuleRegistry.enable(this);
-  }
-
-  public void disable() {
-    ModuleRegistry.disable(this);
+  public void enabled(boolean enable) {
+    if (enable) ModuleRegistry.enable(this);
+    else ModuleRegistry.disable(this);
   }
 
   public SelectorParser parse(PlayerData executor, String[] args) {
