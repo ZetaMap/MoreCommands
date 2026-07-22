@@ -2,15 +2,15 @@
  * Minosoft
  * Copyright (C) 2020-2023 Moritz Zwerger
  *
- * This program is free software: you can redistribute it and/or modify it under the 
- * terms of the GNU General Public License as published by the Free Software Foundation, 
+ * This program is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation,
  * either version 3 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY 
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License along with this 
+ * You should have received a copy of the GNU General Public License along with this
  * program. If not, see <https://www.gnu.org/licenses/>.
  *
  * This software is not affiliated with Mojang AB, the original developer of Minecraft.
@@ -42,10 +42,10 @@ public class StringReader {
     this.length = string.length();
     this.builder = new StringBuilder();
   }
-  
+
   public int position() { return pos; }
   public void position(int pos) { this.pos = pos; }
-  
+
   public void skip() { pos++; }
   public void skip(int n) { pos += n; }
 
@@ -56,10 +56,10 @@ public class StringReader {
     int whitespaces = ignoreWhitespaces ? peekWhitespaces() : 0;
     return pos + offset + whitespaces < length;
   }
-  
+
   public boolean canPeekNext() { return canPeekNext(0); }
-  public boolean canPeekNext(int offset) { 
-    return pos + offset < length; 
+  public boolean canPeekNext(int offset) {
+    return pos + offset < length;
   }
 
   public int peekNext() { return peekNext(0); }
@@ -140,7 +140,7 @@ public class StringReader {
     pos++;
     return quote;
   }
-  
+
   public int unsafeReadQuote() { return readQuote(true); }
   public int unsafeReadQuote(boolean ignoreWhitespaces) {
     int quote = unsafePeek(ignoreWhitespaces);
@@ -148,7 +148,7 @@ public class StringReader {
     pos++;
     return quote;
   }
-  
+
   public String readQuotedString() { return readQuotedString(true); }
   public String readQuotedString(boolean ignoreWhitespaces) {
     if (ignoreWhitespaces) skipWhitespaces();
@@ -163,11 +163,11 @@ public class StringReader {
       }
       builder.append((char)read);
     }
-    
+
     if (read != quote) throw expected("the end of quoted string", read);
     return buildResult();
   }
-    
+
   public String peekWord() { return peekWord(true); }
   public String peekWord(boolean ignoreWhitespaces) {
     if (ignoreWhitespaces) skipWhitespaces();
@@ -197,7 +197,7 @@ public class StringReader {
   public String peekRemaining() {
     return pos >= length ? null : string.substring(pos, length);
   }
-  
+
   public String readRemaining() {
     String str = peekRemaining();
     if (str == null) return null;
@@ -218,7 +218,7 @@ public class StringReader {
   }
 
   public int readNumeric() { return readNumeric(false, true); }
-  public Integer readNumeric(boolean notNegative) { return readNumeric(notNegative, true); }
+  public int readNumeric(boolean notNegative) { return readNumeric(notNegative, true); }
   /** @return the parsed number or {@code null} if no one found and {@code required} id {@code false}, else throw an error. */
   public Integer readNumeric(boolean notNegative, boolean required) {
     int peek = peek();
@@ -251,9 +251,9 @@ public class StringReader {
     if (parsed == Integer.MIN_VALUE) throw error(notNegative ? "Invalid positive number" : "Invalid number");
     return parsed;
   }
-  
+
   public float readDecimal() { return readDecimal(false); }
-  public Float readDecimal(boolean notNegative) { return readDecimal(notNegative, true); }
+  public float readDecimal(boolean notNegative) { return readDecimal(notNegative, true); }
   /** @return the parsed number or {@code null} if no one found and {@code required} id {@code false}, else throw an error. */
   public Float readDecimal(boolean notNegative, boolean required) {
     int peek = peek();
@@ -261,8 +261,8 @@ public class StringReader {
       if (required) throw expected(notNegative ? "a positive decimal number" : "a decimal number");
       return null;
     }
-    
-    // Validate format  
+
+    // Validate format
     if (peek == '-') {
       pos++;
       if (notNegative) throw error("Negative decimal number not allowed here");
@@ -288,14 +288,14 @@ public class StringReader {
       if (required) throw expected(notNegative ? "a positive decimal number" : "a decimal number");
       return null;
     }
-    
+
     // Use double parsing
     double parsed = Strings.parseDouble(buildResult(), Double.MAX_VALUE);
-    if (parsed <= -Float.MAX_VALUE || parsed >= Float.MAX_VALUE) 
+    if (parsed <= -Float.MAX_VALUE || parsed >= Float.MAX_VALUE)
       throw error(notNegative ? "Invalid positive decimal number" : "Invalid decimal number");
     return (float)parsed;
   }
-  
+
   public boolean isNegated() { return isNegated(false); }
   public boolean isNegated(boolean notAllowed) {
     int peek = peek();
@@ -304,7 +304,7 @@ public class StringReader {
     if (notAllowed) throw error("Negateable value not allowed here");
     return true;
   }
-  
+
   public boolean isArray() {
     return peekNext() == '[';
   }
@@ -325,11 +325,11 @@ public class StringReader {
       if (assign != '=') throw expected("a value assignment ('=')", assign);
       skipWhitespaces();
       V value = valueReader.get(r, key);
-      map.put(key, value);  
-    }, "map");  
+      map.put(key, value);
+    }, "map");
     return map;
   }
-  
+
   public <E> Seq<E> readArray(Func<StringReader, E> elementReader) { return readArray(elementReader, "array element"); }
   public <E> Seq<E> readArray(Func<StringReader, E> elementReader, String elementKind) {
     if (!isArray()) return null;
@@ -342,7 +342,7 @@ public class StringReader {
     });
     return seq;
   }
-  
+
   // Reads same as an array but duplicate elements are not allowed
   public <E> ObjectSet<E> readSet(Func<StringReader, E> elementReader) { return readSet(elementReader, "array element"); }
   public <E> ObjectSet<E> readSet(Func<StringReader, E> elementReader, String elementKind) {
@@ -356,7 +356,7 @@ public class StringReader {
     });
     return set;
   }
-    
+
   public boolean readArray(Cons<StringReader> reader) { return readArray(reader, "array"); }
   public boolean readArray(Cons<StringReader> reader, String kind) {
     if (!isArray()) return false;
@@ -365,13 +365,13 @@ public class StringReader {
       pos++;
       return true;
     }
-    
+
     String pronoun = Strings.aOrAn(kind);
     while (canPeekNext()) {
       reader.get(this);
       int read = read();
       if (read == ']') return true;
-      if (read != ',') throw expected(pronoun + ' ' + kind + " separator (',') or " + 
+      if (read != ',') throw expected(pronoun + ' ' + kind + " separator (',') or " +
                                       pronoun + ' ' + kind + " end (']')", read);
       if (peek() == ']') {
         pos++;
@@ -382,60 +382,60 @@ public class StringReader {
   }
 
   @Override
-  public String toString() { 
+  public String toString() {
     String str = peekRemaining();
-    return str == null ? "" : str; 
+    return str == null ? "" : str;
   }
-  
+
   protected String buildResult() {
     String result = builder.toString();
     builder.setLength(0);
     return result;
   }
-  
+
   public ParseException eoi() { return new ParseException("Unexpected end of input"); }
   public ParseException error(String message) { return new ParseException(message); }
   public ParseException expected(String what) { return new ParseException(what, -1); }
   public ParseException expected(String what, int got) { return new ParseException(what, got); }
   public ParseException notFound(String kind, String got) { return new ParseException(kind, got); }
-  
+
   public static boolean isQuote(int ch) { return ch == '"' || ch == '\''; }
   public static boolean isAlpha(int ch) { return ch != -1 && isDigit(ch) || ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z'; }
   public static boolean isWord(int ch) { return ch != -1 && isAlpha(ch) || ch == '.' || ch == '_' || ch == '-' || ch == ':'; }
   public static boolean isDigit(int ch) { return ch >= '0' && ch <= '9'; }
-  
-  
+
+
   @SuppressWarnings("serial")
   public class ParseException extends RuntimeException {
     public static final int maxNearCharacters = 16;
-    
+
     public final int pos = StringReader.this.pos;
     public final String near = getNear(pos);
     protected final String message;
-    
+
     // Reset builder in case of
     { builder.setLength(0); }
-    
+
     public ParseException(String message) {
       this.message = message + formatNear();
     }
-    
+
     public ParseException(String expected, int got) {
       this.message = "Expected " + expected + formatNear() + (got == -1 ? "" : ", but got '" + (char)got + "'");
     }
-    
+
     public ParseException(String kind, String got) {
       this.message = "No " + kind + " named '" + got + "' found" + formatNear();
     }
-    
+
     protected String getNear(int pos) {
       return string.substring(Math.max(0, pos - maxNearCharacters), pos);
     }
-    
+
     protected String formatNear() {
       return " near '" + near + "<--HERE'";
     }
-    
+
     @Override
     public String getMessage() {
       return message;

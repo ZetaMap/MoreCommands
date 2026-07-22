@@ -49,7 +49,7 @@ public abstract class PlayerVoteSession<O> extends VoteSession<PlayerData, O> {
   }
   
   public void force(PlayerData player) {
-    if (!canStop(player)) return;
+    if (!canStop(player) || !canStop()) return;
     super.force(player);
     Events.fire(new MCEvents.VoteSessionClosedEvent(this, player, true));
   }
@@ -61,7 +61,7 @@ public abstract class PlayerVoteSession<O> extends VoteSession<PlayerData, O> {
   }
   
   public void cancel(PlayerData player) {
-    if (!canStop(player)) return;
+    if (!canStop(player) || !canStop()) return;
     super.cancel(player);
     Events.fire(new MCEvents.VoteSessionClosedEvent(this, player, false));
   }

@@ -1,69 +1,80 @@
-/**
- * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
- * Copyright (c) 2025  ZetaMap
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 package fr.zetamap.morecommands.util;
 
 import arc.util.Time;
 
 
-/** Improved version of {@link arc.util.Timekeeper}. */
+/** Grabbed from https://github.com/xpdustry/arc-lite/blob/master/src/main/java/arc/util/Timekeeper.java */
 public class Timekeeper{
-  private final long intervalms;
-  private long time;
+    private final long intervalMs;
+    private long lastTime;
 
-  public Timekeeper(long ms) {
-    intervalms = ms;
-  }
-  
-  public Timekeeper(float seconds) {
-    intervalms = (long)(seconds * 1000);
-  }
-  
-  public long interval() {
-    return intervalms;
-  }
-  
-  @Deprecated
-  public boolean get() {
-    return exceeded();
-  }
+    Timekeeper(long ms){
+        intervalMs = ms;
+    }
 
-  public boolean exceeded() {
-    return elapsed() > intervalms;
-  }
-  
-  public long elapsed() {
-    return Time.timeSinceMillis(time);
-  }
-  
-  public long remaining() {
-    return Math.max(intervalms - elapsed(), 0);
-  }
+    public static Timekeeper ofMillis(long ms){
+        return new Timekeeper(ms);
+    }
 
-  public long last() {
-    return time;
-  }
-  
-  public void reset() {
-    time = Time.millis();
-  }
-  
-  public void zero() {
-    time = 0;
-  }
+    public static Timekeeper ofTicks(float ticks){
+        return ofSeconds(ticks / Time.toSeconds);
+    }
+
+    public static Timekeeper ofSeconds(float seconds){
+        return new Timekeeper((long)(seconds * Time_millisPerSecond));
+    }
+
+    /** @return true if the interval has passed since the last reset(); resets the timer if true */
+    public boolean poll(){
+        boolean result = exceeded();
+        if(result) reset();
+        return result;
+    }
+
+
+    public long interval(){
+        return intervalMs;
+    }
+
+    /**
+     * @return true if the interval has passed since the last reset().
+     *
+     * @deprecated use {@link #exceeded()} instead.
+     */
+    @Deprecated
+    public boolean get(){
+        return exceeded();
+    }
+
+    public boolean exceeded(){
+        return elapsed() > intervalMs;
+    }
+
+    public long elapsed(){
+        return Time_millisSinceNanos(lastTime);
+    }
+
+    public long remaining(){
+        return Math.max(intervalMs - elapsed(), 0);
+    }
+
+    public long last(){
+        return Time.nanosToMillis(lastTime);
+    }
+
+    /** resets the timer; the interval will need to pass until get() returns true again. */
+    public void reset(){
+        lastTime = Time.nanos();
+    }
+
+    public void zero(){
+        lastTime = 0;
+    }
+
+
+    private static long Time_millisPerSecond = 1000;
+
+    private static long Time_millisSinceNanos(long prevTime){
+        return (Time.nanos() - prevTime) / Time.nanosPerMilli;
+    }
 }

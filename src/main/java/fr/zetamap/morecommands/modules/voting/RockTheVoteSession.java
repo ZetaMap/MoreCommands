@@ -18,14 +18,12 @@
 
 package fr.zetamap.morecommands.modules.voting;
 
-import arc.Events;
-
 import mindustry.Vars;
 import mindustry.game.EventType.GameOverEvent;
-import mindustry.gen.Call;
 import mindustry.maps.Map;
 import mindustry.server.ServerControl;
 
+import fr.zetamap.morecommands.Modules;
 import fr.zetamap.morecommands.PlayerData;
 import fr.zetamap.morecommands.misc.Players;
 import fr.zetamap.morecommands.util.DurationFormatter;
@@ -105,58 +103,56 @@ public class RockTheVoteSession extends PlayerVoteSession<Map> {
   public void changeMap() {
     Vars.maps.setNextMapOverride(objective());
     ServerControl.instance.inGameOverWait = false;
-    Events.fire(new GameOverEvent(Vars.state.rules.waveTeam));
+    arc.Events.fire(new GameOverEvent(Vars.state.rules.waveTeam));
   }
   
   @Override
   protected void sessionStarted(PlayerData by) {
-    int remaining = required() - votes();
-    Call.sendMessage(
-      Strings.format("[scarlet]RTV: @[white] started a vote to change the map to [accent]@[white].\n"
-                   + "[scarlet]RTV: [accent]@[white] more vote(s) are required [gray]([lightgray]@[]/[lightgray]@[])[]."
-                   + "Type [orange]/rtv y[] or [orange]/rtv n[] to agree or not.", 
-                     by.getName(), objective().name(), remaining, votes(), required()));
+    String vote = remaining() == 1 ? "vote is" : "votes are";
+    Modules.messaging.serverInfo("RTV", "@ started a vote to change the map to @.\n"
+                                      + "@ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. "
+                                      + "Type [orange]/rtv y[] or [orange]/rtv n[] to agree or not.",
+                                 by.getName(), objective().name(), remaining(), "[]"+vote, "[]"+votes(), "[]"+required());
   }
 
   @Override
   protected void sessionPassed() {
-    Call.sendMessage(Strings.format("[scarlet]RTV:[green] Vote passed, map changed to [accent]@[green].", objective().name()));
+    Modules.messaging.serverOk("RTV", "Vote passed, map changed to @.", objective().name());
     changeMap();
   }
 
   @Override
   protected void sessionForced(PlayerData by) {
-    Call.sendMessage(Strings.format("[scarlet]RTV:[green] Vote skipped by @[green], map changed to [accent]@[green].",
-                                    by.getName(), objective().name()));
+    Modules.messaging.serverOk("RTV", "Vote skipped by @, map changed to @.", by.getName(), objective().name());
     changeMap();
   }
   
   @Override
   protected void sessionFailed() {
-    Call.sendMessage(Strings.format("[scarlet]RTV: Vote failed![] Not enough votes to change the map to [accent]@[white].", 
-                                    objective().name()));
+    Modules.messaging.serverInfo("RTV", "[scarlet]Vote failed![] Not enough votes to change the map to @.", 
+                                 objective().name());
   }
 
   @Override
   protected void sessionCanceled(PlayerData by) {
-    Call.sendMessage(Strings.format("[scarlet]RTV:[orange] Vote cancelled by @[orange].", by.getName()));
+    Modules.messaging.serverWarn("RTV", "Vote cancelled by @.", by.getName());
   }
 
   @Override
   protected void sessionVote(PlayerData who, VoteType type) {
-    int remaining = required() - votes();
-    Call.sendMessage(
-      Strings.format("[scarlet]RTV: @ [white] voted to @change the map to [accent]@[white].\n"
-                   + "[scarlet]RTV: [accent]@[white] more vote(s) are required [gray]([lightgray]@[]/[lightgray]@[])[]."
-                   + "Type [orange]/rtv y[] or [orange]/rtv n[] to agree or not with him.", 
-                     who.getName(), type.yes() ? "" : "not ", objective().name(), remaining, votes(), required()));
+    String vote = remaining() == 1 ? "vote is" : "votes are";
+    Modules.messaging.serverInfo("RTV", "@ voted to @change the map to @.\n"
+                                      + "@ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. "
+                                      + "Type [orange]/rtv y[] or [orange]/rtv n[] to agree or not with him.", 
+                                 who.getName(), type.yes() ? "[]" : "[]not ", objective().name(), "[]"+vote, 
+                                 "[]"+votes(), "[]"+required());
   }
 
   @Override
   protected void sessionVoteRemoved(PlayerData who) {
-    int remaining = required() - votes();
-    Call.sendMessage(Strings.format("[scarlet]RTV: @ [orange]left the game, [accent]@[white] more vote(s) are now required "
-                                  + "[gray]([lightgray]@[]/[lightgray]@[])[].", 
-                                    who.getName(), remaining, votes(), required()));
+    String vote = remaining() == 1 ? "vote is" : "votes are";
+    Modules.messaging.serverInfo("RTV", "@ [orange]left the game[], @ more @ now required "
+                                      + "[gray]([lightgray]@[gray]/[lightgray]@[gray])[white].", 
+                                 who.getName(), remaining(), "[]"+vote, "[]"+votes(), "[]"+required());
   }
 }

@@ -1,17 +1,17 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
- * Copyright (c) 2025  ZetaMap
- * 
+ * Copyright (c) 2025-2026  ZetaMap
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -30,7 +30,7 @@ public class Autosaver {
   protected final static Logger logger = new Logger(Autosaver.class);
   protected static ApplicationListener listener;
   protected static int spacing = 360 * 60; // in ticks
-  /** 
+  /**
    * Doesn't log a message when starting/stopping the {@link Autosaver} or when running an auto save. <br>
    * Errors will always be logged.
    */
@@ -41,60 +41,60 @@ public class Autosaver {
 
   /** Adds to the {@code normal} priority. */
   public static void add(Saveable saveable) {
-    add(saveable, SavePriority.normal);
+    add(saveable, Priority.normal);
   }
-  
-  public static void add(Saveable saveable, SavePriority priority) {
+
+  public static void add(Saveable saveable, Priority priority) {
     remove(saveable);
     priority.saves.add(saveable);
   }
-  
+
   public static void remove(Saveable saveable) {
-    for (SavePriority p : SavePriority.all) {
+    for (Priority p : Priority.all) {
       if (p.saves.remove(saveable)) break;
     }
   }
-  
+
   public static void clear() {
-    for (SavePriority p : SavePriority.all) clear(p);
+    for (Priority p : Priority.all) clear(p);
   }
-  
-  public static void clear(SavePriority priority) {
+
+  public static void clear(Priority priority) {
     priority.saves.clear();
   }
-  
+
   public static boolean has(Saveable saveable) {
     return priorityOf(saveable) != null;
   }
-  
-  public static boolean has(Saveable saveable, SavePriority priority) {
+
+  public static boolean has(Saveable saveable, Priority priority) {
     return priority.saves.contains(saveable);
   }
-  
-  public static SavePriority priorityOf(Saveable saveable) {
-    for (SavePriority p : SavePriority.all) {
+
+  public static Priority priorityOf(Saveable saveable) {
+    for (Priority p : Priority.all) {
       if (has(saveable, p)) return p;
     }
     return null;
   }
-  
+
   public static boolean saveNeeded() {
-    for (SavePriority p : SavePriority.all) {
+    for (Priority p : Priority.all) {
       if (p.saves.contains(Saveable::modified)) return true;
     }
     return false;
   }
-  
+
   /** Save all registered things now (only if modified). Errors are ignored and just printed. */
   public static boolean save() {
     if (!saveNeeded()) return false;
     if (!silent) logger.info("Running autosave...");
-    for (SavePriority p : SavePriority.all) {
+    for (Priority p : Priority.all) {
       p.saves.each(Saveable::modified, s -> {
         if (!silent) logger.debug("Saving @.", s.name());
-        try { s.save(); } 
-        catch (Throwable t) { 
-          logger.err("Failed to save @", t, s.name()); 
+        try { s.save(); }
+        catch (Throwable t) {
+          logger.err("Failed to save @", t, s.name());
           if (errorHandler != null) errorHandler.get(s, t);
         }
       });
@@ -103,27 +103,43 @@ public class Autosaver {
     return true;
   }
 
+  /** Force save all registered things now. Errors are ignored and just printed. */
+  public static void forceSave() {
+    if (!silent) logger.info("Running autosave...");
+    for (Priority p : Priority.all) {
+      p.saves.each(s -> {
+        if (!silent) logger.debug("Saving @.", s.name());
+        try { s.forceSave(); }
+        catch (Throwable t) {
+          logger.err("Failed to save @", t, s.name());
+          if (errorHandler != null) errorHandler.get(s, t);
+        }
+      });
+    }
+    if (!silent) logger.info("Autosave completed.");
+  }
+
   /** Start the auto saver, will also save on application exit. */
   public static boolean start() {
     if (isStarted()) return false;
     Core.app.addListener(listener = new ApplicationListener() {
       Interval timer = new Interval();
-      
+
       @Override
       public void update() {
         if (timer.get(spacing)) save();
       }
-      
+
       @Override
-      public void dispose() { 
-        save();
+      public void dispose() {
+        forceSave();
         stop();
       }
     });
     if (!silent) logger.info("Autosaver started!");
     return true;
   }
-  
+
   public static boolean stop() {
     if (!isStarted()) return false;
     Core.app.removeListener(listener);
@@ -135,32 +151,33 @@ public class Autosaver {
   public static boolean isStarted() {
     return listener != null;
   }
-  
+
   public static int spacing() {
     return spacing / 60;
   }
-  
+
   public static void spacing(int spacing) {
     if (spacing < 1) throw new IllegalArgumentException("spacing must be greater than 1 second");
     Autosaver.spacing = spacing * 60;
   }
-  
+
 
   /** Defines a things that can be saved by the {@link Autosaver}. */
-  public static interface Saveable {
+  public interface Saveable {
     /** Used for logging. */
     String name();
     boolean modified();
     void save();
+    void forceSave(); //TODO: default to save()
   }
-  
-  
+
+
   /** Defines the order to save things. */
-  public static enum SavePriority {
+  public enum Priority {
     high, normal, low;
-    
-    static final SavePriority[] all = values();
-    // More simple to store the saveable things here. 
+
+    static final Priority[] all = values();
+    // More simple to store the saveable things here.
     // Because the priority should not be modified after registration.
     final Seq<Saveable> saves = new Seq<>();
   }

@@ -18,16 +18,14 @@
 
 package fr.zetamap.morecommands.util;
 
-import java.util.Arrays;
-
 import arc.func.Prov;
 import arc.util.Interval;
 
 
 /** Return the last {@link Prov} result until new check. */
 public class IntervalProv extends Interval {
-  Object[] results;
-  boolean[] hasResults;
+  protected Object[] results;
+  protected boolean[] hasResults;
   
   public IntervalProv() { this(1); }
   public IntervalProv(int capacity) { 
@@ -60,9 +58,11 @@ public class IntervalProv extends Interval {
   
   @Override
   public void clear() {
-    super.clear();
-    Arrays.fill(results, null);
-    Arrays.fill(hasResults, false);
+    for (int i=0; i<results.length; i++) {
+      getTimes()[i] = 0;
+      results[i] = null;
+      hasResults[i] = false;
+    }
   }
   
   public boolean hasResult(int id) {
@@ -76,5 +76,9 @@ public class IntervalProv extends Interval {
   
   public Object[] getResults() {
     return results;
+  }
+  
+  public int size() {
+    return results.length;
   }
 }

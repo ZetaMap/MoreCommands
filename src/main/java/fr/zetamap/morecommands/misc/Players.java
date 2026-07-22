@@ -26,7 +26,9 @@
 
 package fr.zetamap.morecommands.misc;
 
+import mindustry.Vars;
 import mindustry.gen.Player;
+import mindustry.net.Administration.PlayerInfo;
 
 import fr.zetamap.morecommands.PlayerData;
 import fr.zetamap.morecommands.util.Strings;
@@ -85,7 +87,7 @@ public class Players {
     if (args[from].length() < 2 || args[from].charAt(0) != '#') return new SearchResult(null, copyIfNeeded(args, from, to));
     int id = Strings.parseInt(args[from], 10, Integer.MIN_VALUE, 1, args[from].length());
     return id == Integer.MIN_VALUE ? new SearchResult(null, copyIfNeeded(args, from, to)) :
-           new SearchResult(PlayerData.id(id), copyIfNeeded(args, from+1, to)); 
+           new SearchResult(PlayerData.get(id), copyIfNeeded(args, from+1, to)); 
   }
   
   public static SearchResult findByUUID(String arg) { return findByUUID(arg.split(" ")); }
@@ -115,6 +117,16 @@ public class Players {
   
   protected static String[] copyIfNeeded(String[] original, int from, int to) {
     return from != 0 || to != original.length ? java.util.Arrays.copyOfRange(original, from, to) : original;
+  }
+  
+  public static String getLastName(String uuid) { return getLastName(uuid, false); }
+  public static String getLastName(String uuid, boolean noColors) {
+    PlayerInfo info = uuid == null ? null : Vars.netServer.admins.getInfoOptional(uuid);
+    if (info == null) return "<unknown>";
+    // Prefer using online player nickname
+    PlayerData player = PlayerData.get(uuid);
+    return player != null ? noColors ? player.stripedName : player.getName() : 
+                            noColors ? info.plainLastName() : info.lastName;
   }
 
   

@@ -1,17 +1,17 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
- * Copyright (c) 2021-2025  ZetaMap
- * 
+ * Copyright (c) 2021-2026  ZetaMap
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -39,36 +39,36 @@ import fr.zetamap.morecommands.util.Strings;
 
 
 public class SwitchModule extends AbstractSaveableModule {
-  // Holds pings for 1 minute and re-updates them when /hub or /switch is called. 
+  // Holds pings for 1 minute and re-updates them when /hub or /switch is called.
   // This avoid a discovery timer, since the usage is only for these commands.
   private boolean discovering;
   private long lastDiscovery;
-  
+
   public final OrderedMap<String, Server> servers = new OrderedMap<>();
   public final ObjectMap<String, Server> aliases = new ObjectMap<>();
   /** Special server name used by the /hub shortcut command. */
   public String hubServerName = "hub";
   /** Discovery cache holding time. (in seconds) */
   public float discoveryHoldTime = 60f;
-  
+
   public boolean discovering() {
     return discovering;
   }
-  
+
   /** Force a new servers discovery. Do nothing if one is already is running. */
   public void forceDiscovery() {
     if (discovering()) return;
     lastDiscovery = 0;
     discovery(null, null, null);
   }
-  
+
   /** Force a new servers discovery. Do nothing if one is already is running. */
   public void forceDiscovery(Runnable done) {
     if (discovering()) return;
     lastDiscovery = 0;
     discovery(null, null, done);
   }
-  
+
   /** Start a discovery if needed and calls {@code done} when finished or when a discovery is not needed. */
   public void discovery(Runnable done) {
     discovery(null, null, done);
@@ -78,7 +78,7 @@ public class SwitchModule extends AbstractSaveableModule {
     if (discovering()) {
       if (isDiscovering != null) isDiscovering.run();
       return;
-      
+
     } else if (servers.isEmpty() || Time.timeSinceNanos(lastDiscovery) < discoveryHoldTime * 1_000_000_000) {
       if (done != null) done.run();
       return;
@@ -95,7 +95,7 @@ public class SwitchModule extends AbstractSaveableModule {
       if (done != null) done.run();
     };
 
-    for (Server s : servers.values()) 
+    for (Server s : servers.values())
       s.ping(h -> finished.run(), e -> finished.run());
   }
 
@@ -103,7 +103,7 @@ public class SwitchModule extends AbstractSaveableModule {
     server.connect(player.player, status -> {
       String message = status.toReason(server);
       StringBuilder builder = new StringBuilder();
-      
+
       if (status.ok()) {
         builder.append(player.getName()).append("[accent] switched to [orange]");
         formattedServerName(builder, server);
@@ -125,43 +125,43 @@ public class SwitchModule extends AbstractSaveableModule {
   protected void safeConnect(PlayerData player, Server server) {
     discovery(
       () -> Players.info(player, "[orange]\ue86a Checking servers..."),
-      () -> Players.info(player, "[orange]\ue837 A discovery is running, please wait..."), 
+      () -> Players.info(player, "[orange]\ue837 A discovery is running, please wait..."),
       () -> connectPlayer(player, server)
     );
   }
-  
+
   protected void formattedServerName(StringBuilder builder, Server server) {
     if (server.displayName != null) builder.append(server.displayName).append(" [gray]([lightgray]");
     builder.append(server.name);
-    if (server.alias != null) 
+    if (server.alias != null)
       builder.append(server.displayName != null ? "[], [lightgray]" : ", ").append(server.alias);
     if (server.displayName != null) builder.append("[])[]");
   }
-  
+
   /** @return the server associated with the {@link #hubServerName} or {@code null} if not defined */
   public Server getHub() {
     return servers.get(hubServerName);
   }
-  
+
   public Server get(String name) {
     return servers.get(name);
   }
-  
+
   public Server getByAlias(String alias) {
     return aliases.get(alias);
   }
-  
+
   public boolean isHubServer(Server server) {
     return isHubServer(server.name);
   }
-  
+
   public boolean isHubServer(String name) {
     return name != null && name.equals(hubServerName);
   }
-  
+
   /** Calls {@link #isAliasValid(String)} if the {@code server} as an alias. */
   public boolean isServerValid(Server server) {
-    return server.alias == null 
+    return server.alias == null
         || !isHubServer(server.alias) && !has(server.alias) && getByAlias(server.alias) == server;
   }
 
@@ -169,7 +169,7 @@ public class SwitchModule extends AbstractSaveableModule {
   protected boolean isAliasValid(String serverAlias) {
     return !isHubServer(serverAlias) && !hasAlias(serverAlias) && !has(serverAlias);
   }
-  
+
   /** @return {@code false} if the alias is already used or correspond to a server name. */
   public boolean put(Server server) {
     if (server.alias != null) {
@@ -180,33 +180,33 @@ public class SwitchModule extends AbstractSaveableModule {
     setModified();
     return true;
   }
-  
+
   public void remove(Server server) {
     servers.remove(server.name);
     if (server.alias != null) aliases.remove(server.alias);
     setModified();
   }
-  
+
   public void remove(String name) {
     Server s = servers.remove(name);
     if (s == null) return;
     if (s.alias != null) aliases.remove(s.alias);
     setModified();
   }
-  
+
   public boolean has(String name) {
     return servers.containsKey(name);
   }
-  
+
   public boolean hasAlias(String serverAlias) {
     return aliases.containsKey(serverAlias);
   }
-  
+
   public void clear() {
     servers.clear();
     setModified();
   }
-  
+
   // region {@link Server} setters
   /** @return {@code false} if the alias is already used or correspond to a server name. */
   public boolean setAlias(Server server, String alias) {
@@ -217,7 +217,7 @@ public class SwitchModule extends AbstractSaveableModule {
     setModified();
     return true;
   }
-  
+
   public void setDisplayName(Server server, String displayName) {
     server.displayName = displayName;
     setModified();
@@ -227,28 +227,28 @@ public class SwitchModule extends AbstractSaveableModule {
     server.setAddress(address);
     setModified();
   }
-  
+
   public void setIp(Server server, String ip) {
     server.ip = ip;
     setModified();
   }
-  
+
   public void setPort(Server server, int port) {
     server.port = port;
     setModified();
   }
-  
+
   public void setAdmin(Server server, boolean adminOnly) {
     server.adminOnly = adminOnly;
     setModified();
   }
   // end region
-  
+
   void setModified0() {
     setModified();
   }
-  
-  @SuppressWarnings("rawtypes")   
+
+  @SuppressWarnings("rawtypes")
   @Override
   protected void initImpl() {
     addSerializer(Server.class, new Json.Serializer<Server>() {
@@ -266,12 +266,12 @@ public class SwitchModule extends AbstractSaveableModule {
       @Override
       public Server read(Json json, JsonValue jsonData, Class type) {
         return new Server(
-          jsonData.getString("name"), 
+          jsonData.getString("name"),
           jsonData.getString("alias", null),
           jsonData.getString("display", null),
           jsonData.getString("address"),
           jsonData.getBoolean("private", false)
-        );   
+        );
       }
     });
   }
@@ -287,7 +287,7 @@ public class SwitchModule extends AbstractSaveableModule {
     servers.each((n, s) -> {
       if (s.alias == null) return;
       Server found = aliases.get(s.alias);
-      if (found != null) 
+      if (found != null)
         logger.warn("Duplicated alias '@' for server '@': '@' is already using it.", s.alias, s.name, found.name);
       else if (isHubServer(s.alias))
         logger.warn("Invalid alias '@' for server '@': this is a reserved name, so it cannot be used as an alias.",
@@ -296,7 +296,7 @@ public class SwitchModule extends AbstractSaveableModule {
         logger.warn("Invalid alias '@' for server '@': another server is named same as the alias.", s.alias, s.name);
       else aliases.put(s.alias, s);
     });
-    
+
     forceDiscovery();
   }
 
@@ -307,20 +307,20 @@ public class SwitchModule extends AbstractSaveableModule {
 
   @Override
   public void registerServerCommands(ServerCommandHandler handler) {
-    handler.add("switch", "[help|arg0] [args...]", "Configures the switch system. Use '&fiswitch help&fr&lw' for usage.", 
+    handler.add("switch", "[help|arg0] [args...]", "Configures the switch system. Use '&fiswitch help&fr&lw' for usage.",
     args -> {
       if (args.length == 0) {
         if (servers.isEmpty()) {
           logger.info("Server list: [@]", "empty");
           return;
         }
-        
+
         int[] privates = {0};
         StringBuilder builder = new StringBuilder();
         Seq<String> lines = servers.orderedKeys().map(n -> {
           Server s = servers.get(n);
           if (s.adminOnly()) privates[0]++;
-          
+
           builder.setLength(0);
           builder.append("&lk|&fr &fb&lb").append(s.name).append("&fr");
           if (s.alias() != null) builder.append(", &fb&lb").append(s.alias()).append("&fr");
@@ -329,10 +329,10 @@ public class SwitchModule extends AbstractSaveableModule {
           if (isHubServer(s)) builder.append(", &fb&lghub server&fr");
           if (s.adminOnly()) builder.append(", &fb&lradminOnly&fr");
           if (!isServerValid(s)) builder.append(", &fb&lrINVALID&fr");
-          
+
           return builder.toString();
         });
-        
+
         logger.info("Server list: [total: @, private: @]", servers.size, privates[0]);
         lines.each(logger::info);
         return;
@@ -341,29 +341,33 @@ public class SwitchModule extends AbstractSaveableModule {
       String[] rest = args.length == 1 ? new String[0] : args[1].split(" ");
       switch (args[0]) {
         case "help":
-          logger.info("Usage: switch help\n"
-                    + "   or: switch refresh\n"
-                    + "   or: switch add <name> <ip[:port]>\n"
-                    + "   or: switch remove <name>\n"
-                    + "   or: switch clear\n"
-                    + "   or: switch set <name> <property> <value...>\n\n"
-                    + "Properties:\n"
-                    + "  - alias: The server's short name, usually one or two letters.\n"
-                    + "  - display-name: The formatted server name, with colors, glyphs, spaces or capital letters.\n"
-                    + "                  Only used to display servers in &fi/switch&fr.\n"
-                    + "  - admin-only: Whether only administrators from THIS server can connect to the other server.\n"
-                    + "                This DOESN'T guarantee that only administrators from the OTHER server can connect, \n"
-                    + "                e.g. using the server ip instead of the command. \n"
-                    + "                So PLEASE set a whitelist on the OTHER server to ensure its security. \n\n"
-                    + "Notes:\n"
-                    + "  - The name '@' is special and used by the '&fi/hub&fr' shortcut command.\n"
-                    + "  - The server @ must be in lowercase kebab, without colors, glyphs, spaces, etc.\n"
-                    + "    The same goes for the @ property.\n"
-                    + "  - The '@' value can be used to reset a property.\n"
-                    + "  - A server is marked as '@' if it's alias is the same as another one or correspond "
-                    + "to a server name.", hubServerName, "name", "alias", "null", "&fb&lrINVALID");
+          logger.info("""
+            Usage: switch help
+               or: switch refresh
+               or: switch add <name> <ip[:port]>
+               or: switch remove <name>
+               or: switch clear
+               or: switch set <name> <property> <value...>
+
+            Properties:
+              - alias: The server's short name, usually one or two letters.
+              - display-name: The formatted server name, with colors, glyphs, spaces or capital letters.
+                              Only used to display servers in &fi/switch&fr.
+              - admin-only: Whether only administrators from THIS server can connect to the other server.
+                            This DOESN'T guarantee that only administrators from the OTHER server can connect,
+                            e.g. using the server ip instead of the command.
+                            So PLEASE set a whitelist on the OTHER server to ensure its security.
+
+            Notes:
+              - The name '@' is special and used by the '&fi/hub&fr' shortcut command.
+              - The server @ must be in lowercase kebab, without colors, glyphs, spaces, etc.
+                The same goes for the @ property.
+              - The '@' value can be used to reset a property.
+              - A server is marked as '@' if it's alias is the same as another one or correspond to a server name.""",
+            hubServerName, "name", "alias", "null", "&fb&lrINVALID"
+          );
           break;
-          
+
         case "refresh":
           if (discovering()) logger.err("A servers discovery is already running.");
           else {
@@ -377,16 +381,16 @@ public class SwitchModule extends AbstractSaveableModule {
             logger.err("Missing 'name' and/or 'ip' argument(s)!");
             return;
           } else if (has(rest[0])) {
-            logger.err("Server '@' already in the list. Use '@' to modify it's properties.", 
+            logger.err("Server '@' already in the list. Use '@' to modify it's properties.",
                        rest[0], "switch set " + rest[0] + " ...");
             return;
           } else if (args[1].isBlank()) {
             logger.err("Empty server address.");
             return;
           }
-          
-          try { 
-            put(new Server(rest[0], rest[1].strip())); 
+
+          try {
+            put(new Server(rest[0], rest[1].strip()));
             logger.info("Server added to the list.");
           } catch (Exception e) {
             logger.err("Invalid server address: @", e.getMessage());
@@ -401,7 +405,7 @@ public class SwitchModule extends AbstractSaveableModule {
             logger.err("Server '@' not in the list. ", rest[0]);
             return;
           }
-          
+
           remove(rest[0]);
           logger.info("Server removed from the list.");
           break;
@@ -410,7 +414,7 @@ public class SwitchModule extends AbstractSaveableModule {
           clear();
           logger.info("Removed all servers from the list.");
           break;
-          
+
         case "set":
           if (rest.length < 2) {
             logger.err("Missing 'name' and/or 'property' argument(s)!");
@@ -419,10 +423,10 @@ public class SwitchModule extends AbstractSaveableModule {
             logger.err("Server '@' not in the list. ", rest[0]);
             return;
           }
-          
+
           Server server = get(rest[0]);
           boolean remove = rest.length > 2 && rest[2].equals("null");
-          
+
           switch (rest[1]) {
             case "alias":
               if (rest.length < 3) {
@@ -444,7 +448,7 @@ public class SwitchModule extends AbstractSaveableModule {
                 logger.info("Server alias @.", old == null ? "added" : "modified");
               }
               break;
-              
+
             case "display-name":
               if (remove) {
                 setDisplayName(server, null);
@@ -455,7 +459,7 @@ public class SwitchModule extends AbstractSaveableModule {
                 logger.info("Server display name @.", old == null ? "added" : "modified");
               } else logger.info("The display name of server '@' is currently: @.", server.name, server.displayName);
               break;
-              
+
             case "admin-only":
               if (rest.length > 2) {
                 if (remove || Strings.isFalse(rest[2])) {
@@ -468,24 +472,24 @@ public class SwitchModule extends AbstractSaveableModule {
                   logger.err("Invalid property value! Must be 'true', 'false' or 'null'.");
                   return;
                 }
-              } else logger.info("The server '@' is currently available for @.", server.name, 
+              } else logger.info("The server '@' is currently available for @.", server.name,
                                  server.adminOnly ? "administrators only" : "everyone");
-              if (server.adminOnly) 
+              if (server.adminOnly)
                 logger.warn("This doesn't guarantee that only administrators from the server can connect. "
                           + "Don't forget to set a whitelist on the other server to ensure its security.");
               break;
-              
+
             default:
               logger.err("Invalid property name! Must be 'alias', 'display-name' or 'admin-only'.");
           }
           break;
-          
-        default: 
+
+        default:
           logger.err("Invalid argument! Must be 'help', 'refresh', 'add', 'remove', 'clear' or 'set'.");
       }
     });
   }
-  
+
   @Override
   public void registerClientCommands(ClientCommandHandler handler) {
     handler.add("hub", "Connect you to the hub server. [gray]Shortcut of '/switch hub'.[]", (args, player) -> {
@@ -502,7 +506,7 @@ public class SwitchModule extends AbstractSaveableModule {
       } else if (args.length == 0) {
         discovery(
           () -> Players.info(player, "[orange]\ue86a Checking servers..."),
-          () -> Players.info(player, "[orange]\ue837 A discovery is running, please wait..."), 
+          () -> Players.info(player, "[orange]\ue837 A discovery is running, please wait..."),
           () -> {
             //TODO: a popup instead?
             Players.info(player, "Available servers:");
@@ -515,7 +519,7 @@ public class SwitchModule extends AbstractSaveableModule {
               if (s.info == null) {
                 builder.append("[scarlet]Offline\n");
                 return;
-              } 
+              }
               builder.append("[accent]").append(s.info.players);
               if (s.info.playerLimit != 0) builder.append("[white]/[accent]").append(s.info.playerLimit);
               builder.append("[white] player");
@@ -527,11 +531,11 @@ public class SwitchModule extends AbstractSaveableModule {
         );
         return;
       }
-      
+
       String name = Strings.kebabize(args[0]); // In case of the player typed the name with spaces or capital letters.
       Server server = get(name);
       if (server == null) server = getByAlias(name);
-      
+
       if (server != null && isServerValid(server)) safeConnect(player, server);
       else Players.err(player, "No server named '[orange]@[]' found.", name);
     });

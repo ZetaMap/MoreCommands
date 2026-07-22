@@ -24,9 +24,9 @@ import arc.struct.Seq;
 import mindustry.gen.Player;
 import mindustry.gen.Unit;
 
-import fr.zetamap.morecommands.misc.UnitCategory;
 import fr.zetamap.morecommands.modules.selector.Selector;
 import fr.zetamap.morecommands.modules.selector.SelectorProperty;
+import fr.zetamap.morecommands.modules.selector.util.UnitCategory;
 import fr.zetamap.morecommands.util.StringReader;
 
 
