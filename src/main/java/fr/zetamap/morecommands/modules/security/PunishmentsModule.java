@@ -477,10 +477,10 @@ public class PunishmentsModule extends AbstractSaveableModule {
         if (mute != null) {
           Players.err(p, "You're muted, you can't speak! [gray](ends in [lightgray]@[])",
                       DurationFormatter.format(mute.remaining()));
-          return null;
+          return false;
         }
-        return m;
-      })
+        return true;
+      }) ? m : null
     );
 
     Vars.netServer.admins.addActionFilter(a ->
