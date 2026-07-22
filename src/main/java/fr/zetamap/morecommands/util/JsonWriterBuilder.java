@@ -43,7 +43,7 @@ public class JsonWriterBuilder implements BaseJsonWriter, Poolable {
     //  throw new IllegalStateException("Builder must be closed before getting the result");
     return root;
   }
-  
+
   @Override
   /** No-op */
   public void setOutputType(OutputType outputType) {}
@@ -57,7 +57,7 @@ public class JsonWriterBuilder implements BaseJsonWriter, Poolable {
     if (current == null || current.isArray())
       throw new IllegalStateException("Current item must be an object.");
     if (name == null) throw new NullPointerException("name cannot be null");
-      
+
     this.name = name;
     return this;
   }
@@ -65,11 +65,11 @@ public class JsonWriterBuilder implements BaseJsonWriter, Poolable {
   @Override
   public JsonWriterBuilder value(Object object) {
     requireName();
-    if (current != null && !current.isArray() && !current.isObject()) 
+    if (current != null && !current.isArray() && !current.isObject())
       throw new IllegalStateException("Current item must be an object or an array.");
-    
+
     JsonValue jval;
-    
+
     if (object == null) jval = new JsonValue(ValueType.nullValue);
     else if (object instanceof Number) {
         Number number = (Number)object;
@@ -80,7 +80,7 @@ public class JsonWriterBuilder implements BaseJsonWriter, Poolable {
         else if (object instanceof Float) jval = new JsonValue(number.floatValue());
         else if (object instanceof Double) jval = new JsonValue(number.doubleValue());
         else throw new IllegalArgumentException("Unknown number object type.");
-    } else if (object instanceof CharSequence || 
+    } else if (object instanceof CharSequence ||
                object instanceof Character) jval = new JsonValue(object.toString());
     else if (object instanceof Boolean) jval = new JsonValue((boolean)object);
     else if (object instanceof JsonValue) {
@@ -95,12 +95,12 @@ public class JsonWriterBuilder implements BaseJsonWriter, Poolable {
         jval.child = json.child;
       }
     } else throw new IllegalArgumentException("Unknown object type.");
-    
+
     if (root == null) root = current = jval;
     else addValue(jval);
     return this;
   }
-  
+
   @Override
   public JsonWriterBuilder object() {
     requireName();
@@ -114,27 +114,27 @@ public class JsonWriterBuilder implements BaseJsonWriter, Poolable {
     newChild(true);
     return this;
   }
-  
+
   private void addValue(JsonValue value) {
     if (current.child == null || last == null) {
       current.addChild(name, value);
       last = current.child;
       while (last.next != null) last = last.next;
-    
+
     } else {
       if (name != null) value.name = new String(name); // idk how this works
       value.parent = current;
       last.next = value;
       last = last.next;
     }
-    
+
     name = null;
   }
-  
+
   private void newChild(boolean array) {
     JsonValue newValue = new JsonValue(array ? ValueType.array : ValueType.object);
     JsonValue old = current;
-    
+
     if (current == null) current = newValue;
     if (root == null) root = current;
     if (old != null) {
@@ -143,13 +143,13 @@ public class JsonWriterBuilder implements BaseJsonWriter, Poolable {
     }
     last = null;
   }
-  
-  
+
+
   private void requireName() {
     if (current != null && !current.isArray() && name == null)
       throw new IllegalStateException("Name must be set.");
   }
-  
+
   @Override
   public JsonWriterBuilder object(String name) {
       return name(name).object();
@@ -167,19 +167,19 @@ public class JsonWriterBuilder implements BaseJsonWriter, Poolable {
 
   @Override
   public JsonWriterBuilder pop() {
-    if (name != null) 
+    if (name != null)
       throw new IllegalStateException("Expected an object, array or value, since a name was set.");
     last = current;
     if (last != null && (last.isArray() || last.isObject())) {
       while (last.next != null) last = last.next;
-      current = current.parent;      
+      current = current.parent;
     }
     return this;
   }
 
   @Override
   public void close() {
-    while (current != null && root != current) 
+    while (current != null && root != current)
       pop();
   }
 

@@ -389,16 +389,19 @@ public class MindustryJson extends Json {
   public boolean ignoreTransiant/* = true*/, ignoreDeprecated, readDeprecated;
   public String typeName = "class";
 
+  @Override
   public void setTypeName(String typeName) {
     this.typeName = typeName;
     super.setTypeName(typeName);
   }
 
+  @Override
   public void setIgnoreDeprecated(boolean ignoreDeprecated) {
     this.ignoreDeprecated = ignoreDeprecated;
     super.setIgnoreDeprecated(ignoreDeprecated);
   }
 
+  @Override
   public void setReadDeprecated(boolean readDeprecated) {
     this.readDeprecated = readDeprecated;
     super.setReadDeprecated(readDeprecated);
@@ -478,6 +481,7 @@ public class MindustryJson extends Json {
   }
 
   /** Same as {@link super#getFields(Class)} but can read {@code transient} fields. */
+  @Override
   @SuppressWarnings("deprecation")
   public OrderedMap<String, FieldMetadata> getFields(Class type) {
     OrderedMap<String, FieldMetadata> fields = typeToFields.get(type);

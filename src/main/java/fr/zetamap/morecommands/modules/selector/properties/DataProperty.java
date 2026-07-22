@@ -1,17 +1,17 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
  * Copyright (c) 2025  ZetaMap
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -37,7 +37,7 @@ import fr.zetamap.morecommands.util.StringReader;
 /** minecraft's nbt like property. WIP */
 public class DataProperty extends SelectorProperty {
   private final JsonReader reader = new JsonReader();
-  
+
   @Override
   public Parsed read(StringReader reader) {
     boolean negated = reader.isNegated();
@@ -47,13 +47,13 @@ public class DataProperty extends SelectorProperty {
     catch (Exception e) { throw reader.error(e.getMessage()); }
   }
 
-  
+
   public class Parsed extends SelectorProperty.Parsed {
     public final JsonValue data;
     public final boolean negated;
     protected Class<? extends Unit> readedType;
     protected ObjectMap<Field, Object> readed;
-    
+
     public Parsed(JsonValue data, boolean negated) {
       this.data = data;
       this.negated = negated;
@@ -68,14 +68,14 @@ public class DataProperty extends SelectorProperty {
         readed = MindustryJson.get().readFields(entity.getClass(), data);
         readedType = entity.getClass();
       }
-      
+
       // This is really inefficient (can hold lot of memory) but this is the only way
       for (ObjectMap.Entry<Field, Object> e : readed) {
         try {
           if (!e.key.get(entity).equals(e.value)) return negated;
         } catch (Exception ignored) {}
       }
-      return !negated; 
+      return !negated;
     }
   }
 }

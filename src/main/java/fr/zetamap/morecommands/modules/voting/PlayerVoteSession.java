@@ -1,17 +1,17 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
- * Copyright (c) 2025  ZetaMap
- * 
+ * Copyright (c) 2025-2026  ZetaMap
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -34,7 +34,7 @@ public abstract class PlayerVoteSession<O> extends VoteSession<PlayerData, O> {
     if (started) Events.fire(new MCEvents.VoteSessionStartedEvent(this, player));
     return started;
   }
-  
+
   @Override
   protected boolean vote(PlayerData people, VoteType type, boolean silent) {
     boolean voted = super.vote(people, type, silent);
@@ -42,24 +42,28 @@ public abstract class PlayerVoteSession<O> extends VoteSession<PlayerData, O> {
     return voted;
   }
 
+  @Override
   public void force() {
     if (!canStop()) return;
     super.force();
     Events.fire(new MCEvents.VoteSessionClosedEvent(this, null, true));
   }
-  
+
+  @Override
   public void force(PlayerData player) {
     if (!canStop(player) || !canStop()) return;
     super.force(player);
     Events.fire(new MCEvents.VoteSessionClosedEvent(this, player, true));
   }
-  
+
+  @Override
   public void cancel() {
     if (!canStop()) return;
     super.cancel();
     Events.fire(new MCEvents.VoteSessionClosedEvent(this, null, false));
   }
-  
+
+  @Override
   public void cancel(PlayerData player) {
     if (!canStop(player) || !canStop()) return;
     super.cancel(player);

@@ -1,17 +1,17 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
  * Copyright (c) 2025  ZetaMap
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -44,12 +44,12 @@ public class TeamingModule extends AbstractModule {
     if (nameOrId.equals("purple")) return Team.malis; // old name
     return Structs.find(Team.all, t -> t.name.equals(nameOrId));
   }
-  
+
   public Team getTeam(PlayerData executor, String tildNameOrId) {
     return tildNameOrId.equals("~") ? executor.player.team() : searchTeam(tildNameOrId);
   }
-  
-  /** 
+
+  /**
    * Will change the team and do the associated things if it's the vanish team or if the player leaves it.
    * @return whether {@code player} has been {@link PlayerData#vanished()} or not.
    */
@@ -69,7 +69,7 @@ public class TeamingModule extends AbstractModule {
     }
     return false;
   }
-  
+
   /** @return whether the {@code player} was {@link PlayerData#vanished()} or not. */
   public boolean removeVanish(PlayerData player) {
     if (!player.vanished()) return false;
@@ -82,13 +82,13 @@ public class TeamingModule extends AbstractModule {
     player.setName();
     return true;
   }
-  
+
   @Override
   public void registerClientCommands(ClientCommandHandler handler) {
     //TODO: allow this command in pvp?
     handler.addAdmin("team", "[teamName|vanish|~] [player|selector...]", "Change team.", (args, player) -> {
       if (args.length == 0) {
-        // Not a great idea to mix two behavior. 
+        // Not a great idea to mix two behavior.
         // But I don't want another argument or to run again '/team vanish' to get send back
         if (player.vanished()) {
           Players.info(player, "Transferring you back to your last team...");
@@ -108,37 +108,33 @@ public class TeamingModule extends AbstractModule {
               break;
             }
           }
-          Players.info(player, builder.toString());          
+          Players.info(player, builder.toString());
         }
         return;
       }
-      
+
       Team team = args[0].equals("vanish") ? PlayerData.vanishTeam : getTeam(player, args[0]);
       if (team == null) {
         Players.err(player, "No team found for name or id '[orange]@[]'.", args[0]);
         return;
       }
       String teamName = team.coloredName();
-      
+
       if (args.length == 1) {
-        if (args[0].equals("~")) 
+        if (args[0].equals("~"))
           Players.warn(player, "Makes no sense to get transferred to your current team =/. Use this with a selector instead.");
-        //else if (team != PlayerData.vanishTeam && team.cores().isEmpty()) 
-        //  Players.err(player, "This team has no cores. Cannot transfer you.");
-        else {
-          if (!setTeam(player, team)) Players.ok(player, "Transferred you to the [white]@[] team.", teamName);
-          else Players.ok(player, "You are now in vanish mode. [lightgray]Use [gray]/team[] to disable it.");
-        }
+        else if (!setTeam(player, team)) Players.ok(player, "Transferred you to the [white]@[] team.", teamName);
+        else Players.ok(player, "You are now in vanish mode. [lightgray]Use [gray]/team[] to disable it.");
         return;
       }
-      
+
       SelectorParser parsed = Modules.selector.parse(player, args, 1, args.length);
       if (parsed == null) return; // Error message has already been send to the player
       if (team == PlayerData.vanishTeam && parsed.selected != null && !parsed.selected.allMatch(Unit::isPlayer)) {
         Players.err(player, "Vanish team is reserved for players but some units was selected.");
         return;
       }
-      
+
       parsed.execute((p, u) -> {
         if (p == null) {
           u.team(team);

@@ -1,17 +1,17 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
- * Copyright (c) 2025  ZetaMap
- * 
+ * Copyright (c) 2025-2026  ZetaMap
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -39,17 +39,17 @@ import fr.zetamap.morecommands.util.Strings;
 public class VotingModule extends AbstractModule {
   private final IntMap<IntervalProv> rateLimitCache = new IntMap<>();
   private final float messageRateLimit = 3 * 60;
-  
+
   public final RockTheVoteSession rtvSession = new RockTheVoteSession();
   public final VoteNewWaveSession vnwSession = new VoteNewWaveSession();
   public final VoteKickSession vkSession = new VoteKickSession();
   public boolean canVote;
-  
+
   @Override
   protected void initImpl() {
     Events.on(EventType.GameOverEvent.class, e -> {
       // Disable votes
-      canVote = false; 
+      canVote = false;
       // Stop votes
       rtvSession.cancel();
       vnwSession.cancel();
@@ -59,7 +59,7 @@ public class VotingModule extends AbstractModule {
       // Enable votes
       canVote = true;
     });
-    
+
     Events.on(EventType.PlayerLeave.class, e -> {
       PlayerData player = PlayerData.get(e.player);
       rtvSession.remove(player);
@@ -67,7 +67,7 @@ public class VotingModule extends AbstractModule {
       vkSession.remove(player); // remove the vote?
       rateLimitCache.remove(player.player.id);
     });
-    
+
     // Players who are currently being voted on can no longer interact, to prevent griefing.
     Vars.netServer.admins.addActionFilter(a -> {
       return getrate(a.player).get(messageRateLimit, () -> {
@@ -76,7 +76,7 @@ public class VotingModule extends AbstractModule {
                               + "You can no longer interact with the game elements until the vote ends.");
           return false;
         }
-        return true;  
+        return true;
       });
     });
   }
@@ -84,7 +84,7 @@ public class VotingModule extends AbstractModule {
   private IntervalProv getrate(Player player) {
     return rateLimitCache.get(player.id, IntervalProv::new);
   }
-  
+
   @Override
   public void registerClientCommands(ClientCommandHandler handler) {
     handler.add("votekick", "[player] [reason...]", "Vote to kick a player with a valid reason.", (args, player) -> {
@@ -95,13 +95,13 @@ public class VotingModule extends AbstractModule {
       } else if (!canVote) {
         Players.err(player, "Votes are disabled for now, please wait.");
         return;
-        
+
       } else if (args.length == 0) {
         if (PlayerData.size() == 1) {
           Players.info(player, "No player to votekick.");
           return;
         }
-        
+
         StringBuilder builder = new StringBuilder("[orange]Players to kick: \n");
         PlayerData.each(p -> !p.admin() && p.player.con != null && p != player, p -> {
             builder.append(" [orange]- ").append(p.getName());
@@ -111,29 +111,29 @@ public class VotingModule extends AbstractModule {
         Players.info(player, builder.toString());
         return;
       } else if (!vkSession.canStart(player, null)) return;
-      
+
       Players.SearchResult result = Players.find(args);
       if (!result.found) Players.errPlayerNotFound(player);
-      else if (result.rest.length == 0) 
+      else if (result.rest.length == 0)
         Players.warn(player, "You need a valid reason to kick the player.[] Add a reason after the player name.");
       else vkSession.start(player, new VoteKickSession.Context(player, result.player, Strings.join(" ", result.rest)));
     });
-    
+
     handler.add("vote", "<y|n|c>", "Vote to kick the current player. Admins can cancel the vote with 'c'.", (args, player) -> {
       if (!canVote) {
         Players.err(player, "Votes are disabled for now, please wait.");
         return;
-      } 
-      
+      }
+
       switch (args[0].toLowerCase()) {
-        case "y": case "yes": vkSession.yes(player); break;
-        case "n": case "no": vkSession.no(player); break;
-        case "c": case "cancel": vkSession.cancel(player); break;
-        default: Players.err(player.player, "Vote either 'y' (yes)@ 'n' (no)@.", player.admin() ? ", " : " or", 
-                             player.admin() ? " or 'c' (cancel)" : "");
+        case "y", "yes" -> vkSession.yes(player);
+        case "n", "no" -> vkSession.no(player);
+        case "c", "cancel" -> vkSession.cancel(player);
+        default -> Players.err(player.player, "Vote either 'y' (yes)@ 'n' (no)@.", player.admin() ? ", " : " or",
+                               player.admin() ? " or 'c' (cancel)" : "");
       }
     });
-    
+
     handler.add("maps", "[page]", "List all maps of the server.", (args, player) -> {
       if (args.length == 1 && !Strings.canParseInt(args[0])) {
         Players.err(player, "'[orange]page[]' must be a number.");
@@ -141,8 +141,8 @@ public class VotingModule extends AbstractModule {
       }
 
       StringBuilder builder = new StringBuilder();
-      int page = args.length == 1 ? Strings.parseInt(args[0]) : 1, 
-          perPage = 12, 
+      int page = args.length == 1 ? Strings.parseInt(args[0]) : 1,
+          perPage = 12,
           pages = Mathf.ceil((float)Vars.maps.all().size / perPage);
 
       if (page > pages || page < 1) {
@@ -160,7 +160,7 @@ public class VotingModule extends AbstractModule {
                .append(map.height).append("[])[]").append(" [white]by [sky]").append(map.author()).append('\n');
       }
       builder.append("[orange]-----------------------");
-      
+
       Players.info(player, builder.toString());
     });
 
@@ -168,25 +168,25 @@ public class VotingModule extends AbstractModule {
       if (!canVote) {
         Players.err(player, "Votes are disabled for now, please wait.");
         return;
-        
+
       } else if (args.length == 0) {
         vnwSession.start(player);
         return;
       }
-   
+
       switch (args[0].toLowerCase()) {
-        case "y": case "yes": vnwSession.yes(player); break;
-        case "n": case "no": vnwSession.no(player); break;
-        case "c": case "cancel": vnwSession.cancel(player); break;
-        case "f": case "force": 
+        case "y", "yes" -> vnwSession.yes(player);
+        case "n", "no" -> vnwSession.no(player);
+        case "c", "cancel" -> vnwSession.cancel(player);
+        case "f", "force" -> {
           if (vnwSession.started()) vnwSession.force(player);
           else if (!player.admin()) Players.errArgUseDenied(player);
           else {
             vnwSession.skipCooldown();
             Players.ok(player, "Cooldown skipped.");
           }
-          break;
-        default:
+        }
+        default -> {
           int waves = Strings.parseInt(args[0]);
           if (waves == Integer.MIN_VALUE) {
             if (!player.admin()) Players.err(player.player, "Vote either 'y' (yes) or 'n' (no).");
@@ -194,6 +194,7 @@ public class VotingModule extends AbstractModule {
                              vnwSession.started() ? "\nOr a number of waves to send." : "");
           } else if (!player.admin()) Players.errArgUseDenied(player);
           else vnwSession.start(player, waves);
+        }
       }
     });
 
@@ -201,25 +202,25 @@ public class VotingModule extends AbstractModule {
       if (!canVote) {
         Players.err(player, "Votes are disabled for now, please wait.");
         return;
-        
+
       } else if (args.length == 0) {
         rtvSession.start(player);
         return;
       }
-   
+
       switch (args[0].toLowerCase()) {
-        case "y": case "yes": rtvSession.yes(player); break;
-        case "n": case "no": rtvSession.no(player); break;
-        case "c": case "cancel": rtvSession.cancel(player); break;
-        case "f": case "force": 
+        case "y", "yes" -> rtvSession.yes(player);
+        case "n", "no" -> rtvSession.no(player);
+        case "c", "cancel" -> rtvSession.cancel(player);
+        case "f", "force" -> {
           if (rtvSession.started()) rtvSession.force(player);
           else if (!player.admin()) Players.errArgUseDenied(player);
           else {
             rtvSession.skipCooldown();
             Players.ok(player, "Cooldown skipped.");
           }
-          break;
-        default: rtvSession.start(player, args[0]);
+        }
+        default -> rtvSession.start(player, args[0]);
       }
     });
   }

@@ -1,17 +1,17 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
  * Copyright (c) 2025  ZetaMap
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -42,14 +42,14 @@ public class Selector {
   public final Sorting sorting;
   public final Extractor extractor;
   public final int id;
-  
+
   public Selector(String name, Extractor extractor) { this(name, 0, Sorting.arbitrary, extractor); }
   public Selector(String name, int limit, Extractor extractor) { this(name, limit, Sorting.arbitrary, extractor); }
   public Selector(String name, Sorting sorting, Extractor extractor) { this(name, 0, sorting, extractor); }
   /**
    * @param name the selector's name/alias.
    * @param one whether this selector will select only one entity.
-   * @param sorting sorting to do after selected the units. {@code null} for no sorting. 
+   * @param sorting sorting to do after selected the units. {@code null} for no sorting.
    * @param extractor the entity extractor
    */
   public Selector(String name, int limit, Sorting sorting, Extractor extractor) {
@@ -61,26 +61,27 @@ public class Selector {
   }
 
   public Seq<Unit> select(Player executor) { return select(executor, null); }
-  /** 
+  /**
    * If {@code executor} is {@code null} or {@link Player#dead()}, a zero position is used. <br>
-   * And, in this case, if {@code bounding} properties are presents, {@code positioning} properties must also be presents, 
+   * And, in this case, if {@code bounding} properties are presents, {@code positioning} properties must also be presents,
    * else an {@link IllegalArgumentException} is thrown.
    */
+  @SuppressWarnings("null")
   public Seq<Unit> select(Player executor, Seq<SelectorProperty.Parsed> properties) {
     Seq<Unit> selected = new Seq<>(false); // First unordered for optimization purposes
     Vec2 pos = new Vec2();
-    boolean hasProps = properties != null && properties.any(), 
+    boolean hasProps = properties != null && properties.any(),
             needSorting = sorting != null,
             needLimiting = limit > 0;
 
     if (hasProps) properties.sort(p -> p.property.category.ordinal());
 
     if (executor != null && !executor.dead()) pos.set(executor);
-    else if (hasProps && 
+    else if (hasProps &&
              properties.contains(p -> p.property.category == SelectorProperty.Category.bounding) &&
              !properties.contains(p -> p.property.category == SelectorProperty.Category.positioning))
       throw new IllegalArgumentException("Unable to find executor position. Please add positioning properties.");
-    
+
     extractor.select(selected, executor);
     // Removes null units. Can happen when a selector target dead players
     selected.removeAll(u -> u == null);
@@ -106,20 +107,21 @@ public class Selector {
         p.update(this, selected, executor, pos);
       }
     }
-    
+
     if (needSorting) sorting.sort(selected, pos);
     if (needLimiting) selected.truncate(limit);
 
     selected.ordered = true; // Now make it ordered for the caller's use.
     return selected;
   }
-  
+
+  @Override
   public String toString() {
     return Selectors.prefix + name;
   }
 
-  
-  public static interface Extractor {
+
+  public interface Extractor {
     /** Note that {@code executor} can be {@code null}, e.g. when running on console. */
     void select(Seq<Unit> out, Player executor);
   }

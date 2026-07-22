@@ -1,17 +1,17 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
  * Copyright (c) 2025  ZetaMap
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -35,54 +35,54 @@ import fr.zetamap.morecommands.util.Strings;
 
 public class TagsModule extends AbstractSaveableModule {
   private boolean enabled = true;
-  
+
   public final StringMap tags = new StringMap();
-  
+
   public String get(String uuid) {
     return tags.get(uuid);
   }
-  
+
   public String get(PlayerData player) {
     return get(player.player.uuid());
   }
-  
+
   public void put(String uuid, String tag) {
     tags.put(uuid, tag);
     setModified();
   }
-  
+
   public void put(PlayerData player, String tag) {
     put(player.player.uuid(), tag);
   }
-  
+
   public void remove(String uuid) {
     tags.remove(uuid);
     setModified();
   }
-  
+
   public void remove(PlayerData player) {
     remove(player.player.uuid());
   }
-  
+
   public boolean has(String uuid) {
     return tags.containsKey(uuid);
   }
-  
+
   public boolean has(PlayerData player) {
     return has(player.player.uuid());
   }
-  
+
   public boolean enabled() {
     return enabled;
   }
-  
+
   public void enable() {
     if (enabled) return;
     enabled = true;
     setModified();
     PlayerData.each(PlayerData::setTag);
   }
-  
+
   public void disable() {
     if (!enabled) return;
     enabled = false;
@@ -122,18 +122,18 @@ public class TagsModule extends AbstractSaveableModule {
           logger.err(args.length == 1 ? "The 'UUID' and 'tag' arguments are missing!" : "The 'tag' argument is missing!");
           return;
         }
-        
+
         if (Vars.netServer.admins.getInfoOptional(args[1]) == null)
           logger.warn("No player found with the UUID '@'.", args[1]);
         logger.info(tags.put(args[1], args[2]) == null ? "Tag added." : "Tag replaced.");
         setModified();
-        
+
         PlayerData p = PlayerData.get(args[1]);
         if (p != null) {
           p.setTag();
           logger.info("Player online, the tag has been added to him.");
         }
-        
+
       } else if (args[0].equals("remove")) {
         if (args.length == 1) {
           logger.err("The 'UUID' argument is missing!");
@@ -145,48 +145,48 @@ public class TagsModule extends AbstractSaveableModule {
           logger.info("Tag removed.");
           setModified();
         }
-        
+
         PlayerData p = PlayerData.get(args[1]);
         if (p != null) {
           p.setTag();
           logger.info("Player online, the tag has been removed from him.");
         }
-        
+
       } else if (Strings.isTrue(args[0])) {
         enable();
         logger.info("Tags enabled.");
-        
+
       } else if (Strings.isFalse(args[0])) {
         disable();
         logger.info("Tags disabled.");
-        
+
       } else logger.err("Invalid argument! Must be 'on', 'off', 'set' or 'remove'");
     });
   }
-  
+
   @Override
   public void registerClientCommands(ClientCommandHandler handler) {
     handler.addAdmin("tag", "[page|set|remove] [UUID] [tag...]", "Configure the tag system.", (args, player) -> {
       if (args.length > 0) {
         if (args[0].equals("set")) {
           if (args.length < 3) {
-            Players.err(player, args.length == 1 ? "The '[orange]UUID[]' and '[orange]tag[]' arguments are missing!" : 
+            Players.err(player, args.length == 1 ? "The '[orange]UUID[]' and '[orange]tag[]' arguments are missing!" :
                                                    "The '[orange]tag[]' argument is missing!");
             return;
           }
-          
+
           if (Vars.netServer.admins.getInfoOptional(args[1]) == null)
             Players.warn(player, "No player found with the UUID '@'.", args[1]);
           Players.ok(player, tags.put(args[1], args[2]) == null ? "Tag added." : "Tag replaced.");
           setModified();
-          
+
           PlayerData p = PlayerData.get(args[1]);
           if (p != null) {
             p.setTag();
             Players.info(player, "Player online, the tag has been added to him.");
           }
           return;
-          
+
         } else if (args[0].equals("remove")) {
           if (args.length == 1) {
             Players.err(player, "The 'UUID' argument is missing!");
@@ -198,7 +198,7 @@ public class TagsModule extends AbstractSaveableModule {
             Players.ok(player, "Tag removed.");
             setModified();
           }
-          
+
           PlayerData p = PlayerData.get(args[1]);
           if (p != null) {
             p.setTag();
@@ -208,26 +208,26 @@ public class TagsModule extends AbstractSaveableModule {
           return;
         }
       }
-      
+
       int page = 1, perPage = 12, pages = Mathf.ceil((float)tags.size / perPage);
       if (args.length > 0) page = Strings.parseInt(args[0]);
-      
+
       if (page == Integer.MIN_VALUE) {
         Players.err(player, "Invalid argument! Must be '[orange]set[]' or '[orange]remove[]' or [orange]a page number[].");
         return;
       } else if (tags.isEmpty()) {
-        Players.info(player, "Player tags: [[@, [gray]empty[]]", 
+        Players.info(player, "Player tags: [[@, [gray]empty[]]",
                      enabled ? "[green]enabled[]" : "[scarlet]disabled[]");
         return;
       } else if (page < 1 || page > pages) {
         Players.err(player, "'[orange]page[]' must be between [orange]1[] and [orange]@[].", pages);
         return;
       }
-      
-      Players.info(player, "Player tags: [[[lightgray]@[gray]/[]@[], @, total: [lightgray]@[]]", page, pages, 
+
+      Players.info(player, "Player tags: [[[lightgray]@[gray]/[]@[], @, total: [lightgray]@[]]", page, pages,
                    enabled ? "[green]enabled[]" : "[scarlet]disabled[]", tags.size);
       StringBuilder builder = new StringBuilder();
-      
+
       // Since this is an unordered map, the paging system will be by skipping the n first elements.
       int i = 0, n = perPage*(page-1);
       ObjectMap.Entries<String, String> it = tags.entries();

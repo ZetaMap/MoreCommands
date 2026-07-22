@@ -1,17 +1,17 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
  * Copyright (c) 2025  ZetaMap
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -42,7 +42,7 @@ public class HelpModule extends AbstractModule {
       
       if (args.length == 1) {
         if (args[0].equals("selectors")) {
-          mindustry.gen.Call.openURI(player.player.con, 
+          mindustry.gen.Call.openURI(player.player.con,
             "https://github.com/ZetaMap/MoreCommands/blob/main/README.md#selectors");
           return;
         }
@@ -73,12 +73,12 @@ public class HelpModule extends AbstractModule {
         return;
       }
       
-      Players.info(player, "[orange]-- Commands page [lightgray]@[gray]/[]@ [gray]([]@[gray])[][] --", page, pages, 
+      Players.info(player, "[orange]-- Commands page [lightgray]@[gray]/[]@ [gray]([]@[gray])[][] --", page, pages,
                    commands.size);
       StringBuilder builder = new StringBuilder();
       for(int i=perPage*(page-1); i<Math.min(perPage*page, commands.size); i++) {
         Command c = commands.get(i);
-        if (player.admin()) 
+        if (player.admin())
           builder.append("[lightgray][[").append(handler.isAdmin(c.text) ? "[scarlet]A[]" : "[blue]P[]").append("][]");
         builder.append("  [orange]/").append(c.text).append(" [white]").append(c.paramText).append(" [lightgray]- ")
                .append(c.description).append("\n");

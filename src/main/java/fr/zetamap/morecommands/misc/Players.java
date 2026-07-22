@@ -3,7 +3,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2024-2025 ZetaMap
+ * Copyright (c) 2024-2026 ZetaMap
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,25 +46,25 @@ public class Players {
   public static void err(PlayerData player, String message, Object... args) { err(player.player, message, args); }
   public static void err(Player player, String message) { player.sendMessage("[scarlet]" + message); }
   public static void err(Player player, String message, Object... args) { player.sendMessage("[scarlet]" + Strings.format(message, args)); }
-  
+
   public static void info(PlayerData player, String message) { info(player.player, message); }
   public static void info(PlayerData player, String message, Object... args) { info(player.player, message, args); }
   public static void info(Player player, String message) { player.sendMessage(message); }
   public static void info(Player player, String message, Object... args) { player.sendMessage(Strings.format(message, args)); }
-  
+
   public static void warn(PlayerData player, String message) { warn(player.player, message); }
   public static void warn(PlayerData player, String message, Object... args) { warn(player.player, message, args); }
   public static void warn(Player player, String message) { player.sendMessage("[orange]" + message); }
   public static void warn(Player player, String message, Object... args) { player.sendMessage("[orange]" + Strings.format(message, args)); }
-  
+
   public static void ok(PlayerData player, String message) { ok(player.player, message); }
   public static void ok(PlayerData player, String message, Object... args) { ok(player.player, message, args); }
   public static void ok(Player player, String message) { player.sendMessage("[green]" + message); }
   public static void ok(Player player, String message, Object... args) { player.sendMessage("[green]" + Strings.format(message, args)); }
-  
+
   public static SearchResult findByName(String[] args) { return findByName(String.join(" ", args)); }
   public static SearchResult findByName(String[] args, int from, int to) { return findByName(Strings.join(" ", args, from, to)); }
-  /** 
+  /**
    * Tries to find a player by their name. (sorted by most larger name first to avoid non-targatable players) <br>
    * Non-targatable players are players that includes a command argument or information of another player
    * at end of his nickname, to not be targeted by commands.
@@ -78,63 +78,63 @@ public class Players {
     //TODO: avoid to removes colors to the rest of arguments
     return new SearchResult(target, (target == null ? arg : args.substring(target.stripedName.length()).strip()).split(" "));
   }
-  
+
   public static SearchResult findByID(String arg) { return findByID(arg.split(" ")); }
   public static SearchResult findByID(String[] args) { return findByID(args, 0, args.length); }
   /** Tries to find a player by their unitID (a unitID looks like this: #000001) */
-  public static SearchResult findByID(String[] args, int from, int to) { 
+  public static SearchResult findByID(String[] args, int from, int to) {
     if (args.length == 0 || from < 0 || to > args.length || from >= to) return new SearchResult(null, args);
     if (args[from].length() < 2 || args[from].charAt(0) != '#') return new SearchResult(null, copyIfNeeded(args, from, to));
     int id = Strings.parseInt(args[from], 10, Integer.MIN_VALUE, 1, args[from].length());
     return id == Integer.MIN_VALUE ? new SearchResult(null, copyIfNeeded(args, from, to)) :
-           new SearchResult(PlayerData.get(id), copyIfNeeded(args, from+1, to)); 
+           new SearchResult(PlayerData.get(id), copyIfNeeded(args, from+1, to));
   }
-  
+
   public static SearchResult findByUUID(String arg) { return findByUUID(arg.split(" ")); }
   public static SearchResult findByUUID(String[] args) { return findByUUID(args, 0, args.length); }
   /** Tries to find a player by their UUID or shortUUID */
-  public static SearchResult findByUUID(String[] args, int from, int to) { 
+  public static SearchResult findByUUID(String[] args, int from, int to) {
     if (args.length == 0 || from < 0 || to > args.length || from >= to) return new SearchResult(null, args);
     if (args[from].length() < 10 || args[from].length() > 25) return new SearchResult(null, copyIfNeeded(args, from, to));
-    return new SearchResult(PlayerData.find(p -> p.player.uuid().equals(args[from]) || p.shortUuid.equals(args[from])), 
-                            copyIfNeeded(args, from+1, to)); 
+    return new SearchResult(PlayerData.find(p -> p.player.uuid().equals(args[from]) || p.shortUuid.equals(args[from])),
+                            copyIfNeeded(args, from+1, to));
   }
-  
+
   public static SearchResult find(String arg) { return find(arg.split(" ")); }
   public static SearchResult find(String[] args) { return find(args, 0, args.length); }
-  /** 
+  /**
    * General function to find a player. <br>
-   * First, will try to find by name, to avoid non-targatable players. 
+   * First, will try to find by name, to avoid non-targatable players.
    * (more infos in {@link #findByName(String)} <br>
    * After, by the unitID (like #012345). <br>
    * And finally, by the player UUID.
    */
-  public static SearchResult find(String[] args, int from, int to) { 
+  public static SearchResult find(String[] args, int from, int to) {
     args = copyIfNeeded(args, from, to);// avoid multiple copy
-    SearchResult target = Players.findByName(args); 
+    SearchResult target = Players.findByName(args);
     return target.found ? target : (target = Players.findByID(args)).found ? target : Players.findByUUID(args);
   }
-  
+
   protected static String[] copyIfNeeded(String[] original, int from, int to) {
     return from != 0 || to != original.length ? java.util.Arrays.copyOfRange(original, from, to) : original;
   }
-  
+
   public static String getLastName(String uuid) { return getLastName(uuid, false); }
   public static String getLastName(String uuid, boolean noColors) {
     PlayerInfo info = uuid == null ? null : Vars.netServer.admins.getInfoOptional(uuid);
     if (info == null) return "<unknown>";
     // Prefer using online player nickname
     PlayerData player = PlayerData.get(uuid);
-    return player != null ? noColors ? player.stripedName : player.getName() : 
+    return player != null ? noColors ? player.stripedName : player.getName() :
                             noColors ? info.plainLastName() : info.lastName;
   }
 
-  
+
   public static class SearchResult {
     public final PlayerData player;
     public final String[] rest;
     public final boolean found;
-    
+
     public SearchResult(PlayerData player, String[] rest) {
       this.player = player;
       // In case of

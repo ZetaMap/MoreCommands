@@ -1,17 +1,17 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
- * Copyright (c) 2025  ZetaMap
- * 
+ * Copyright (c) 2025-2026  ZetaMap
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -34,23 +34,28 @@ public class RockTheVoteSession extends PlayerVoteSession<Map> {
   public RockTheVoteSession() {
     super(2 * 60, 3 * 60);
   }
-  
+
+  @Override
   public boolean canStart(PlayerData player, Map map) {
     if (PlayerData.size() < 2 && !player.admin()) {
       Players.err(player, "At least 2 players are required to start a vote.");
       return false;
     } else if (started()) {
-      Players.err(player, "A vote to change the map is already in progress! [lightgray](selected: [accent]@[lightgray])\n"
-                        + "[scarlet]Type [orange]/rtv y[] or [orange]/rtv n[] to agree or not.", objective().name());
+      Players.err(player, """
+        A vote to change the map is already in progress! \
+        [lightgray](selected: [accent]@[lightgray])
+        [scarlet]Type [orange]/rtv y[] or [orange]/rtv n[] to agree or not.""",
+        objective().name()
+      );
       return false;
     } else if (waitRemaining() > 0) {
-      Players.err(player, "You must wait [orange]@[] before able to restart a vote.", 
+      Players.err(player, "You must wait [orange]@[] before able to restart a vote.",
                   DurationFormatter.format(waitRemaining()));
       return false;
     }
     return true;
   }
-  
+
   /** Start a new vote session with a random map. */
   public boolean start(PlayerData player) {
     if (!canStart(player, null)) return false; // null objective can be used safely.
@@ -58,7 +63,7 @@ public class RockTheVoteSession extends PlayerVoteSession<Map> {
     Players.info(player, "Randomized to [accent]@[white].", map.name());
     return start(player, map);
   }
-  
+
   /** Start a new vote session using the map name. */
   public boolean start(PlayerData player, String mapName) {
     if (!canStart(player, null)) return false; // null objective can be used safely.
@@ -71,7 +76,8 @@ public class RockTheVoteSession extends PlayerVoteSession<Map> {
     }
     return start(player, map);
   }
-  
+
+  @Override
   public boolean canVote(PlayerData player) {
     if (!started()) {
       Players.err(player, "No vote session in progress.");
@@ -82,7 +88,8 @@ public class RockTheVoteSession extends PlayerVoteSession<Map> {
     }
     return true;
   }
-  
+
+  @Override
   public boolean canStop(PlayerData player) {
     if (!started()) {
       Players.err(player, "No vote session in progress.");
@@ -105,14 +112,16 @@ public class RockTheVoteSession extends PlayerVoteSession<Map> {
     ServerControl.instance.inGameOverWait = false;
     arc.Events.fire(new GameOverEvent(Vars.state.rules.waveTeam));
   }
-  
+
   @Override
   protected void sessionStarted(PlayerData by) {
     String vote = remaining() == 1 ? "vote is" : "votes are";
-    Modules.messaging.serverInfo("RTV", "@ started a vote to change the map to @.\n"
-                                      + "@ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. "
-                                      + "Type [orange]/rtv y[] or [orange]/rtv n[] to agree or not.",
-                                 by.getName(), objective().name(), remaining(), "[]"+vote, "[]"+votes(), "[]"+required());
+    Modules.messaging.serverInfo("RTV", """
+      @ started a vote to change the map to @.
+      @ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. \
+      Type [orange]/rtv y[] or [orange]/rtv n[] to agree or not.""",
+      by.getName(), objective().name(), remaining(), "[]"+vote, "[]"+votes(), "[]"+required()
+    );
   }
 
   @Override
@@ -126,10 +135,10 @@ public class RockTheVoteSession extends PlayerVoteSession<Map> {
     Modules.messaging.serverOk("RTV", "Vote skipped by @, map changed to @.", by.getName(), objective().name());
     changeMap();
   }
-  
+
   @Override
   protected void sessionFailed() {
-    Modules.messaging.serverInfo("RTV", "[scarlet]Vote failed![] Not enough votes to change the map to @.", 
+    Modules.messaging.serverInfo("RTV", "[scarlet]Vote failed![] Not enough votes to change the map to @.",
                                  objective().name());
   }
 
@@ -141,18 +150,20 @@ public class RockTheVoteSession extends PlayerVoteSession<Map> {
   @Override
   protected void sessionVote(PlayerData who, VoteType type) {
     String vote = remaining() == 1 ? "vote is" : "votes are";
-    Modules.messaging.serverInfo("RTV", "@ voted to @change the map to @.\n"
-                                      + "@ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. "
-                                      + "Type [orange]/rtv y[] or [orange]/rtv n[] to agree or not with him.", 
-                                 who.getName(), type.yes() ? "[]" : "[]not ", objective().name(), "[]"+vote, 
-                                 "[]"+votes(), "[]"+required());
+    Modules.messaging.serverInfo("RTV", """
+      @ voted to @change the map to @.
+      @ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. \
+      Type [orange]/rtv y[] or [orange]/rtv n[] to agree or not with him.""",
+      who.getName(), type.yes() ? "[]" : "[]not ", objective().name(), "[]"+vote, "[]"+votes(), "[]"+required()
+    );
   }
 
   @Override
   protected void sessionVoteRemoved(PlayerData who) {
     String vote = remaining() == 1 ? "vote is" : "votes are";
-    Modules.messaging.serverInfo("RTV", "@ [orange]left the game[], @ more @ now required "
-                                      + "[gray]([lightgray]@[gray]/[lightgray]@[gray])[white].", 
-                                 who.getName(), remaining(), "[]"+vote, "[]"+votes(), "[]"+required());
+    Modules.messaging.serverInfo("RTV",
+      "@ [orange]left the game[], @ more @ now required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white].",
+      who.getName(), remaining(), "[]"+vote, "[]"+votes(), "[]"+required()
+    );
   }
 }
