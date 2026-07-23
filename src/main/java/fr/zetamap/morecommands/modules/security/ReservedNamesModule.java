@@ -117,7 +117,7 @@ public class ReservedNamesModule extends AbstractSaveableModule {
           logger.info("Reserved Nicknames: [@, total: @]", enabled ? "&fb&lgenabled&fr" : "&fb&lrdisabled&fr", names.size);
           names.each(n -> logger.info("&lk|&fr @", n));
         }
-        defaultReserved.each(n -> logger.info("&lk|&fr &fb&lg@", n)); //TODO: display them better?
+        defaultReserved.each(n -> logger.info("&lk|&fr &fb&lg" + n)); //TODO: display them better?
 
       } else if (args[0].equals("add")) {
         if (args.length == 1) logger.err("Missing 'name' argument.");

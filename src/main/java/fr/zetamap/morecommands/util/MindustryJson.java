@@ -63,6 +63,11 @@ public class MindustryJson extends Json {
     applyMindustrySerializers(instance);
   }
 
+  {
+    // By default, do not ignore unknown field for proper user serialization
+    setIgnoreUnknownFields(false);
+  }
+
   public static MindustryJson get() {
     return instance;
   }

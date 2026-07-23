@@ -247,7 +247,7 @@ public class EffectsModule extends AbstractSaveableModule {
                     all.orderedKeys().count(this::isAdminOnly));
         all.each((n, e) -> logger.info("&lk|&fr " + Strings.lJust(n + " (&fi&lb" + e.id + "&fr): ", length) +
                                        (e.disabled() ? "&fb&lrdisabled&fr, " : "&fb&lbenabled&fr,  ") +
-                                       (e.adminOnly() ? "&fb&lyadmin-only&fr" : "&fb&lgeveryone&fr")));
+                                       (e.adminOnly() ? "&fb&lyadmin&fr" : "&fb&lgeveryone&fr")));
         return;
 
       } else if (args[0].equals("reset")) {

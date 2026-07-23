@@ -154,7 +154,7 @@ public class MiscModule extends AbstractModule {
   public void initImpl() {
     reconnectOnExit = new Config(
       "reconnectOnExit",
-      "Reconnect players when the server exits instead of kicking them. (if supported)" +
+      "Reconnect players when the server exits instead of kicking them. " +
       "This is usefull when a server restart is needed, without bothering peoples.",
       false
     );

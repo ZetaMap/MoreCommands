@@ -30,6 +30,7 @@ import arc.struct.ObjectSet;
 import arc.struct.Seq;
 import arc.util.serialization.Base64Coder;
 
+import mindustry.Vars;
 import mindustry.game.EventType;
 import mindustry.game.Team;
 import mindustry.gen.Call;
@@ -285,7 +286,8 @@ public class PlayerData {
     Gatekeeper.add("nickname-requirements", ctx ->
       ctx.strippedName.isBlank() ? Gatekeeper.reject(KickReason.nameEmpty) :
       ctx.strippedName.length() < 2 ? Gatekeeper.reject("Your nickname must be at least [orange]2[] characters long.") :
-      find(d -> d.stripedName.equals(ctx.strippedName)) != null ? Gatekeeper.reject(KickReason.nameInUse) :
+      Vars.netServer.admins.isStrict() && find(d -> d.stripedName.equals(ctx.strippedName)) != null ?
+        Gatekeeper.reject(KickReason.nameInUse) :
       Gatekeeper.accept()
     );
   }

@@ -18,15 +18,11 @@
 
 package fr.zetamap.morecommands.modules.world;
 
-import java.io.DataOutputStream;
-
 import arc.Events;
 import arc.math.geom.Position;
 import arc.struct.ObjectMap;
 import arc.struct.Seq;
 import arc.util.Timer;
-import arc.util.io.ReusableByteOutStream;
-import arc.util.io.Writes;
 import arc.util.serialization.JsonReader;
 import arc.util.serialization.JsonValue;
 
@@ -46,6 +42,7 @@ import mindustry.world.Block;
 import mindustry.world.Tile;
 import mindustry.world.blocks.ConstructBlock;
 import mindustry.world.blocks.storage.CoreBlock;
+import mindustry.world.meta.BlockFlag;
 
 import fr.zetamap.morecommands.Modules;
 import fr.zetamap.morecommands.PlayerData;
@@ -176,42 +173,11 @@ public class WorldEditModule extends AbstractModule {
     Vars.netServer.sendWorldData(player);
   }
 
-  private ReusableByteOutStream syncStream = new ReusableByteOutStream();
-  private Writes dataStreamWrites = new Writes(new DataOutputStream(syncStream));
-  private static final int maxSnapshotSize = 800;
-
-  /** Will force blocks snapshot, even for ones that are not configured for. */
   public void sendBlockSnapshot() {
     try {
-/*
-      // Re-implement the method to be able to send snapshot of blocks not configured for
-      syncStream.reset();
-      short sent = 0;
-
-      for (Tile tile : Vars.world.tiles) {
-        if (tile.build == null) continue;
-        sent++;
-
-        dataStreamWrites.i(tile.build.pos());
-        dataStreamWrites.s(tile.build.block.id);
-        tile.build.writeSync(dataStreamWrites);
-
-        if (syncStream.size() > maxSnapshotSize) {
-          dataStreamWrites.close();
-          Call.blockSnapshot(sent, syncStream.toByteArray());
-          sent = 0;
-          syncStream.reset();
-        }
-      }
-
-      if (sent > 0) {
-        dataStreamWrites.close();
-        Call.blockSnapshot(sent, syncStream.toByteArray());
-      }
-*/
       Vars.netServer.writeBlockSnapshots();
     } catch (Exception e) {
-      logger.err("Failed to send block snapshot. Resending world data to players...");
+      logger.err("Failed to send block snapshots. Resending world data to players...");
       logger.err(e);
       sendWorld();
     }
@@ -236,7 +202,17 @@ public class WorldEditModule extends AbstractModule {
     }
   }
 
+  protected JsonValue parseJson(PlayerData player, String[] args, int from, int to) {
+    try {
+      return new JsonReader().parse(Strings.join(" ", args, from, to));
+    } catch (Exception e) {
+      Players.err(player, Strings.neatError(e, false));
+      return null;
+    }
+  }
+
   protected boolean checkBuildingData(PlayerData player, Block block, Team team, JsonValue data) {
+    if (data == null) return false;
     if (block.hasBuilding()) {
       // Validate custom data
       try {
@@ -254,6 +230,7 @@ public class WorldEditModule extends AbstractModule {
   }
 
   protected boolean checkUnitData(PlayerData player, UnitType unit, Team team, JsonValue data) {
+    if (data == null) return false;
     // Validate custom data
     try {
       // Create a stub unit for validation
@@ -265,14 +242,15 @@ public class WorldEditModule extends AbstractModule {
     }
   }
 
-  private static final TileChangeEvent tileChange = new TileChangeEvent();
-  private static final TilePreChangeEvent preChange = new TilePreChangeEvent();
+  protected static final TileChangeEvent tileChange = new TileChangeEvent();
+  protected static final TilePreChangeEvent preChange = new TilePreChangeEvent();
 
-  /** Apply custom data to building and run tile change events. Mainly to indexer gets notified of the change. */
+  /** Apply custom data to building and run tile change events. */
   protected void updateBuilding(Tile tile, JsonValue data) throws Exception {
-    //TODO: verify
     if (!Vars.world.isGenerating()) Events.fire(preChange.set(tile));
+    //TODO: use new patch system?
     MindustryJson.get().readFields(tile.build, data);
+    if (tile.build != null) Vars.indexer.getFlagged(tile.team(), BlockFlag.synced).add(tile.build);
     if (!Vars.world.isGenerating()) {
       tile.build.updateProximity();
       Events.fire(tileChange.set(tile));
@@ -334,7 +312,7 @@ public class WorldEditModule extends AbstractModule {
         }
 
         if (args.length > 1) {
-          if (block.hasBuilding()) data = new JsonReader().parse(Strings.join(" ", args, 1, args.length));
+          if (block.hasBuilding()) data = parseJson(player, args, 1, args.length);
           if (!checkBuildingData(player, block, team, data)) return;
         }
       } else if (player.player.dead()) {
@@ -366,7 +344,7 @@ public class WorldEditModule extends AbstractModule {
           updateBuilding(tile, data);
           Players.ok(player, "Succesfully applied custom building data.");
           sendBlockSnapshot();
-          sendEntitySnapshot();
+          //sendEntitySnapshot();
         } catch (Exception e) {
           Players.err(player, "Failed to apply custom building data: \n@", Strings.neatError(e, false));
         }
@@ -398,7 +376,7 @@ public class WorldEditModule extends AbstractModule {
 
       JsonValue data = null;
       if (args.length > 1) {
-        if (block.hasBuilding()) data = new JsonReader().parse(Strings.join(" ", args, 1, args.length));
+        if (block.hasBuilding()) data = parseJson(player, args, 1, args.length);
         if (!checkBuildingData(player, block, team, data)) return;
       }
 
@@ -461,7 +439,7 @@ public class WorldEditModule extends AbstractModule {
                                   Strings.neatError(lastError, false));
       if (count > 0) {
         sendBlockSnapshot();
-        sendEntitySnapshot();
+        //sendEntitySnapshot();
       }
     });
 
@@ -555,7 +533,7 @@ public class WorldEditModule extends AbstractModule {
         }
 
         if (args.length > 1) {
-          data = new JsonReader().parse(Strings.join(" ", args, 1, args.length));
+          data = parseJson(player, args, 1, args.length);
           if (!checkUnitData(player, unit, team, data)) return;
         }
       } else if (player.player.dead()) {
@@ -622,7 +600,7 @@ public class WorldEditModule extends AbstractModule {
 
       JsonValue data = null;
       if (selector.rest.length > 0) {
-        data = new JsonReader().parse(Strings.join(" ", selector.rest));
+        data = parseJson(player, selector.rest, 0, selector.rest.length);
         if (!checkUnitData(player, unit, player.player.team(), data)) return;
       }
 
