@@ -162,7 +162,7 @@ public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> 
       @ [lightgray]voted to @[lightgray]kick @[lightgray].
       @ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. \
       Type [orange]/vote y[] or [orange]/vote n[] to agree or not with him.""",
-      who.getName(), type.yes() ? "[]" : "[]not ", objective().target.getName(), "[]"+vote, "[]"+votes(),
+      who.getName(), type.yes() ? "[]" : "[]not ", objective().target.getName(), remaining(), "[]"+vote, "[]"+votes(),
       "[]"+required()
     );
   }
