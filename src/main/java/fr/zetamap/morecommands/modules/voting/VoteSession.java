@@ -80,7 +80,7 @@ public abstract class VoteSession<P, O> {
 
   /** @return whether the current vote session can be stopped. */
   public boolean canStop() {
-    return started();
+    return task != null;
   }
 
   /**
