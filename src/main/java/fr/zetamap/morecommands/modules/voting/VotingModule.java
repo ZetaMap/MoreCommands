@@ -71,7 +71,7 @@ public class VotingModule extends AbstractModule {
     // Players who are currently being voted on can no longer interact, to prevent griefing.
     Vars.netServer.admins.addActionFilter(a -> {
       return getrate(a.player).get(messageRateLimit, () -> {
-        if (vkSession.started() && vkSession.objective().target.player == a.player) {
+        if (vkSession.started() && vkSession.objective() != null && vkSession.objective().target.player == a.player) {
           Players.err(a.player, "You are currently being voted in. \n"
                               + "You can no longer interact with the game elements until the vote ends.");
           return false;
