@@ -26,6 +26,7 @@
 
 package fr.zetamap.morecommands.util;
 
+import arc.func.Cons;
 import arc.util.Log;
 import arc.util.Log.LogLevel;
 
@@ -95,7 +96,7 @@ public class Logger {
     this.ftopic = topic == null ? null : Strings.format(topicFormat, topic);
   }
 
-  public synchronized void log(LogLevel level, String text, Throwable th, Object... args) {
+  public void log(LogLevel level, String text, Throwable th, Object... args) {
     if (Log.level.ordinal() > level.ordinal()) return;
 
     String tag = noTopic ? "" : Log.format((mainTopic != null ? mainTopic + " " : "") +
@@ -109,7 +110,7 @@ public class Logger {
 
     if (slf4mdPresent && slf4jLogger != null) {
       org.slf4j.Logger l = (org.slf4j.Logger)slf4jLogger;
-      arc.func.Cons<String> printer = switch (level) {
+      Cons<String> printer = switch (level) {
         case debug -> l::debug;
         case info -> l::info;
         case warn -> l::warn;

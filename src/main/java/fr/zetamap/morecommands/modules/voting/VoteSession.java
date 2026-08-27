@@ -18,6 +18,7 @@
 
 package fr.zetamap.morecommands.modules.voting;
 
+import arc.func.Cons;
 import arc.struct.ObjectMap;
 import arc.util.Time;
 import arc.util.Timer;
@@ -27,11 +28,16 @@ import fr.zetamap.morecommands.util.Timekeeper;
 
 /** Reusable vote session class that notify about it's state. */
 public abstract class VoteSession<P, O> {
-  protected ObjectMap<P, VoteType> voted = new ObjectMap<>();
+  protected final ObjectMap<P, VoteType> voted = new ObjectMap<>(16);
+  protected final Timer.Task task = new Timer.Task() {
+    @Override
+    public void run() {
+      if (!canPass()) fail();
+    }
+  };
   protected int votes;
-  protected Timer.Task task;
-  protected float duration;
-  protected Timekeeper cooldown;
+  protected /*final*/ float duration;
+  protected /*final*/ Timekeeper cooldown;
   protected O objective;
 
   /**
@@ -40,22 +46,22 @@ public abstract class VoteSession<P, O> {
    */
   public VoteSession(float duration, float cooldown) {
     this.duration = Math.max(duration, 1);
-    this.cooldown = cooldown <= 0 ? null : Timekeeper.ofSeconds(cooldown);
+    this.cooldown = Timekeeper.ofSeconds(Math.max(cooldown, 0));
   }
 
   /** @return if a new session can be started now. */
   public boolean canStart() {
-    return !started() && (cooldown == null || cooldown.exceeded());
+    return !started() && cooldown.exceeded();
   }
 
   /** @return if a new session can be started now by the specified {@code people} with the specified {@code objective}. */
   public boolean canStart(P people, O objective) {
-    return true;
+    return canStart();
   }
 
   /** @return whether a session is in progress. */
   public boolean started() {
-    return task != null && task.isScheduled();
+    return task.isScheduled();
   }
 
   /**
@@ -63,13 +69,14 @@ public abstract class VoteSession<P, O> {
    * @return {@code false} if a session is already running or a new one cannot start now, else {@code true}.
    */
   public boolean start(P by, O objective) {
+    if (by == null) throw new NullPointerException("by");
+    if (objective == null) throw new NullPointerException("objective");
     if (!canStart(by, objective) || !canStart()) return false;
-    if (task != null) Timer.schedule(task, duration);
-    else task = Timer.schedule(() -> {if (!canPass()) cancel();}, duration);
     this.objective = objective;
+    Timer.schedule(task, duration);
 
-    // Vote before notify starting for a proper count
-    // Also skips the vote verification as if a people can start a session, he can also vote for it
+    // Vote before notify starting, for a proper count.
+    // If a people start a session, assume he is for it.
     voted.put(by, VoteType.YES);
     votes += VoteType.YES.sign();
     sessionStarted(by);
@@ -88,26 +95,27 @@ public abstract class VoteSession<P, O> {
    * @return whether the current vote session can be stopped by this {@code people}
    */
   public boolean canStop(P people) {
-    return true;
+    return canStop();
   }
 
   /**
    * Stop the current vote session without status notification and without cooldown. <br>
    * {@link #cancel()} should be used instead.
    */
-  public void stop() {
-    stop(null, false, null, null);
+  public boolean stop() {
+    return stop(null, false, true, null, null);
   }
 
   /** Stops the session. */
-  protected void stop(P by, boolean withCooldown, Runnable run, arc.func.Cons<P> runPeople) {
-    if ((by != null && !canStop(by)) || !canStop()) return;
-    if (task != null) task.cancel();
+  protected boolean stop(P by, boolean withCooldown, boolean force, Runnable run, Cons<P> runPeople) {
+    if (!force && ((by != null && !canStop(by)) || !canStop())) return false;
+    task.cancel();
     if (by == null && run != null) run.run();
     else if (by != null && runPeople != null) runPeople.get(by);
     clear();
     objective = null;
-    if (withCooldown && cooldown != null) cooldown.reset();
+    if (withCooldown) cooldown.reset();
+    return true;
   }
 
   /** Remove all votes. */
@@ -146,8 +154,8 @@ public abstract class VoteSession<P, O> {
 
   protected boolean vote(P people, VoteType type, boolean silent) {
     if (!canVote(people)) return false;
+    votes += type.sign(); // will check null
     voted.put(people, type);
-    votes += type.sign();
     if (!silent) sessionVote(people, type);
     if (canPass()) force();
     return true;
@@ -163,23 +171,28 @@ public abstract class VoteSession<P, O> {
   }
 
   /** Force finish the current vote session. Do nothing if no session was started. */
-  public void force() {
-    stop(null, true, this::sessionPassed, null);
+  public boolean force() {
+    return stop(null, true, false, this::sessionPassed, null);
   }
 
   /** Force finish the current vote session. Do nothing if no session was started. */
-  public void force(P by) {
-    stop(by, true, null, this::sessionForced);
+  public boolean force(P by) {
+    return stop(by, true, false, null, this::sessionForced);
   }
 
   /** Cancel the current vote session. Do nothing if no session was started. */
-  public void cancel() {
-    stop(null, true, this::sessionFailed, null);
+  public boolean cancel() {
+    return stop(null, true, false, this::sessionFailed, null);
   }
 
   /** Cancel the current vote session. Do nothing if no session was started. */
-  public void cancel(P by) {
-    stop(by, true, null, this::sessionCanceled);
+  public boolean cancel(P by) {
+    return stop(by, true, false, null, this::sessionCanceled);
+  }
+
+  /** Same as {@link #cancel()} but doesn't check for stop ability. */
+  protected void fail() {
+    stop(null, true, true, this::sessionFailed, null);
   }
 
   /** @return what the {@code people} voted, or {@code null} if they didn't vote in the current session. */
@@ -202,39 +215,38 @@ public abstract class VoteSession<P, O> {
     return duration;
   }
 
+  /** @return the objective of the current vote session or {@code null} if no session was started. */
+  public O objective() {
+    return objective;
+  }
+
   /** @return the remaining vote(s) needed to pass the session. */
   public int remaining() {
     return required() - votes();
   }
 
-  /** @return the remaining time of the current session, in ms, or {@code 0} if no session was started.. */
+  /** @return the remaining time of the current session, in ms. */
   public long sessionRemaining() {
     return Math.max(0, task.getExecuteTimeMillis() - Time.millis());
   }
 
-  /** @return the remaining time to wait before restarting a session, in ms, or {@code 0} if no cooldown was defined. */
+  /** @return the remaining time to wait before restarting the session, in ms. */
   public long waitRemaining() {
-    return cooldown == null ? 0 : cooldown.remaining();
+    return cooldown.remaining();
   }
 
-  /** Skip the session cooldown by setting it to zero. */
+  /** Skip the session cooldown. */
   public void skipCooldown() {
-    if (!started() && cooldown != null) cooldown.zero();
+    if (!started()) cooldown.zero();
   }
 
   /** @return whether the current session can pass. */
   public boolean canPass() {
-    return votes >= required();
+    return votes() >= required();
   }
 
   /** @return the required votes to pass a session. */
   public abstract int required();
-
-  /** @return the objective of the current vote session or {@code null} if no session was started */
-  public O objective() {
-    return objective;
-  }
-
 
   // Callbacks
   protected abstract void sessionStarted(P by);

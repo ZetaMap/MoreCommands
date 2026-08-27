@@ -43,7 +43,7 @@ public class TagsModule extends AbstractSaveableModule {
   }
 
   public String get(PlayerData player) {
-    return get(player.player.uuid());
+    return get(player.uuid);
   }
 
   public void put(String uuid, String tag) {
@@ -52,7 +52,7 @@ public class TagsModule extends AbstractSaveableModule {
   }
 
   public void put(PlayerData player, String tag) {
-    put(player.player.uuid(), tag);
+    put(player.uuid, tag);
   }
 
   public void remove(String uuid) {
@@ -61,7 +61,7 @@ public class TagsModule extends AbstractSaveableModule {
   }
 
   public void remove(PlayerData player) {
-    remove(player.player.uuid());
+    remove(player.uuid);
   }
 
   public boolean has(String uuid) {
@@ -69,7 +69,7 @@ public class TagsModule extends AbstractSaveableModule {
   }
 
   public boolean has(PlayerData player) {
-    return has(player.player.uuid());
+    return has(player.uuid);
   }
 
   public boolean enabled() {

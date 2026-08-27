@@ -29,6 +29,7 @@ import arc.util.serialization.JsonValue;
 import mindustry.Vars;
 import mindustry.content.Blocks;
 import mindustry.content.TechTree;
+import mindustry.core.NetServer;
 import mindustry.core.World;
 import mindustry.entities.Units;
 import mindustry.game.EventType;
@@ -42,8 +43,6 @@ import mindustry.world.Block;
 import mindustry.world.Tile;
 import mindustry.world.blocks.ConstructBlock;
 import mindustry.world.blocks.storage.CoreBlock;
-import mindustry.world.meta.BlockFlag;
-
 import fr.zetamap.morecommands.Modules;
 import fr.zetamap.morecommands.PlayerData;
 import fr.zetamap.morecommands.command.ClientCommandHandler;
@@ -103,7 +102,7 @@ public class WorldEditModule extends AbstractModule {
                      + "[lightgray]All units, players, and buildings (except core) will be destroyed.",
                        delay <= 0 ? "[orange]now[]" : "in [orange]" + DurationFormatter.format((long)(delay*1000)) + "[]"));
     if (executor == null) logger.warn("Map cleanup triggered!");
-    else logger.warn("'@' [@] has triggered a map cleanup!", executor.stripedName, executor.player.uuid());
+    else logger.warn("'@' [@] has triggered a map cleanup!", executor.stripedName, executor);
 
     Runnable task = () -> {
       int units = Groups.unit.size(), blocks = 0;
@@ -168,9 +167,13 @@ public class WorldEditModule extends AbstractModule {
     Groups.player.each(Vars.netServer::sendWorldData);
   }
 
-  public void sendWorld(Player player) {
-    Call.worldDataBegin(player.con);
-    Vars.netServer.sendWorldData(player);
+  public void sendWorld(PlayerData player) {
+    Call.worldDataBegin(player.player.con);
+    Vars.netServer.sendWorldData(player.player);
+  }
+
+  public void syncTile(Tile tile) {
+    NetServer.syncBuilding(tile.build);
   }
 
   public void sendBlockSnapshot() {
@@ -189,14 +192,14 @@ public class WorldEditModule extends AbstractModule {
     Vars.netServer.update();
   }
 
-  public void sendEntitySnapshot(Player player) {
+  public void sendEntitySnapshot(PlayerData player) {
     try {
       Vars.netServer.writeStateSnapshot(); // This will send to all players but this is not important
-      Vars.netServer.writeEntitySnapshotsTeam(player.team(), Seq.with(player));
-      if (player.con.localEntities.size > 0)
-        Vars.netServer.writeCustomEntitySnapshot(player, player.con.localEntities);
+      Vars.netServer.writeEntitySnapshotsTeam(player.player.team(), Seq.with(player.player));
+      if (player.player.con.localEntities.size > 0)
+        Vars.netServer.writeCustomEntitySnapshot(player.player, player.player.con.localEntities);
     } catch (Exception e) {
-      logger.err("Failed to send entity snapshot to player '@'. Resending world data...", player.uuid());
+      logger.err("Failed to send entity snapshot to player '@'. Resending world data...", player);
       logger.err(e);
       sendWorld(player);
     }
@@ -248,14 +251,14 @@ public class WorldEditModule extends AbstractModule {
   /** Apply custom data to building and run tile change events. */
   protected void updateBuilding(Tile tile, JsonValue data) throws Exception {
     if (!Vars.world.isGenerating()) Events.fire(preChange.set(tile));
-    //TODO: use new patch system?
+    //TODO: use the new patch system?
     MindustryJson.get().readFields(tile.build, data);
-    if (tile.build != null) Vars.indexer.getFlagged(tile.team(), BlockFlag.synced).add(tile.build);
     if (!Vars.world.isGenerating()) {
       tile.build.updateProximity();
       Events.fire(tileChange.set(tile));
     }
     tile.block().blockChanged(tile);
+    syncTile(tile); // TODO: not very optimized for bulk operations
   }
 
   @Override
@@ -270,8 +273,8 @@ public class WorldEditModule extends AbstractModule {
         TechTree.TechNode node = p.defaultCore.techNode;
         while (node.children.any()) {
           for (TechTree.TechNode n : node.children) {
-            if (n.content instanceof CoreBlock) {
-              cores.add((CoreBlock) n.content);
+            if (n.content instanceof CoreBlock c) {
+              cores.add(c);
               node = n;
               break;
             }
@@ -343,8 +346,6 @@ public class WorldEditModule extends AbstractModule {
         try {
           updateBuilding(tile, data);
           Players.ok(player, "Succesfully applied custom building data.");
-          sendBlockSnapshot();
-          //sendEntitySnapshot();
         } catch (Exception e) {
           Players.err(player, "Failed to apply custom building data: \n@", Strings.neatError(e, false));
         }
@@ -437,10 +438,6 @@ public class WorldEditModule extends AbstractModule {
       if (count > 0) Players.ok(player, "Succesfully applied custom data to [accent]@[] buildings.", count);
       if (errors > 0) Players.err(player, "Failed to apply custom data to [accent]@[] buildings: \n@", errors,
                                   Strings.neatError(lastError, false));
-      if (count > 0) {
-        sendBlockSnapshot();
-        //sendEntitySnapshot();
-      }
     });
 
     handler.addAdmin("core", "<small|medium|big|coreName> [player|x,y] [teamName|~...]", "Build a core.",

@@ -31,8 +31,8 @@ public class VoteNewWaveSession extends PlayerVoteSession<Integer> {
 
   @Override
   public boolean canStart(PlayerData player, Integer wave) {
-    if (PlayerData.size() < 3 && !player.admin()) {
-      Players.err(player, "At least 3 players are required to start a vote.");
+    if (PlayerData.size() < 2 && !player.admin()) {
+      Players.err(player, "At least [orange]2[] players are required to start a vote.");
       return false;
     } else if (started()) {
       Players.err(player, "A vote to run [orange]@[] is already in progress!\n"
@@ -80,7 +80,7 @@ public class VoteNewWaveSession extends PlayerVoteSession<Integer> {
 
   @Override
   public int required() {
-    return PlayerData.size() / 2 + 1;
+    return PlayerData.size() < 4 ? 2 : PlayerData.size() / 2 + 1;
   }
 
   /** Skip the waves. This doesn't just increases the wave number, it runs them. */
@@ -114,7 +114,7 @@ public class VoteNewWaveSession extends PlayerVoteSession<Integer> {
 
   @Override
   protected void sessionFailed() {
-    Modules.messaging.serverInfo("VNW", "[scarlet]Vote failed![] Not enough votes to run @.", stringObjective());
+    Modules.messaging.serverInfo("VNW", "[orange]Vote failed![] Not enough votes to run @.", stringObjective());
   }
 
   @Override
@@ -129,7 +129,8 @@ public class VoteNewWaveSession extends PlayerVoteSession<Integer> {
       @ voted to @run @.
       @ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. \
       Type [orange]/vnw y[] or [orange]/vnw n[] to agree or not with him.""",
-      who.getName(), type.yes() ? "[]" : "[]not ", stringObjective(), "[]"+vote, "[]"+votes(), "[]"+required()
+      who.getName(), type.yes() ? "[]" : "[]not ", stringObjective(), remaining(), "[]"+vote, "[]"+votes(),
+      "[]"+required()
     );
   }
 
@@ -144,6 +145,6 @@ public class VoteNewWaveSession extends PlayerVoteSession<Integer> {
 
   protected String stringObjective() {
     int waves = objective();
-    return (waves == 1 ? "the" : waves+"") + ' ' + (waves == 1 ? "wave" : "waves");
+    return waves == 1 ? "the wave" : Integer.toString(waves) + " waves";
   }
 }

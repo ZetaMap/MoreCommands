@@ -329,7 +329,7 @@ public class EffectsModule extends AbstractSaveableModule {
       if (selector == null) return;
       selector.execute((p, u) -> {
         if (enable && p.vanished()) {
-          Players.warn(player, "Can't start rainbow mode for @[scarlet] because he's in vanish mode!", p.getName());
+          Players.warn(player, "Can't start rainbow mode for @[orange] because he's in vanish mode!", p.getName());
           return;
         }
         p.setRainbow(enable);

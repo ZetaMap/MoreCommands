@@ -26,7 +26,9 @@ import fr.zetamap.morecommands.misc.MCEvents;
 
 /** Class that removes the "people" abstraction layer ({@link PlayerData}) and fires events of done actions. */
 public abstract class PlayerVoteSession<O> extends VoteSession<PlayerData, O> {
-  public PlayerVoteSession(float duration, float cooldown) { super(duration, cooldown); }
+  public PlayerVoteSession(float duration, float cooldown) {
+    super(duration, cooldown);
+  }
 
   @Override
   public boolean start(PlayerData player, O objective) {
@@ -43,30 +45,30 @@ public abstract class PlayerVoteSession<O> extends VoteSession<PlayerData, O> {
   }
 
   @Override
-  public void force() {
-    if (!canStop()) return;
-    super.force();
-    Events.fire(new MCEvents.VoteSessionClosedEvent(this, null, true));
+  public boolean force() {
+    boolean forced = super.force();
+    if (forced) Events.fire(new MCEvents.VoteSessionClosedEvent(this, null, true));
+    return forced;
   }
 
   @Override
-  public void force(PlayerData player) {
-    if (!canStop(player) || !canStop()) return;
-    super.force(player);
-    Events.fire(new MCEvents.VoteSessionClosedEvent(this, player, true));
+  public boolean force(PlayerData player) {
+    boolean forced = super.force(player);
+    if (forced) Events.fire(new MCEvents.VoteSessionClosedEvent(this, player, true));
+    return forced;
   }
 
   @Override
-  public void cancel() {
-    if (!canStop()) return;
-    super.cancel();
-    Events.fire(new MCEvents.VoteSessionClosedEvent(this, null, false));
+  public boolean cancel() {
+    boolean canceled = super.cancel();
+    if (canceled) Events.fire(new MCEvents.VoteSessionClosedEvent(this, null, false));
+    return canceled;
   }
 
   @Override
-  public void cancel(PlayerData player) {
-    if (!canStop(player) || !canStop()) return;
-    super.cancel(player);
-    Events.fire(new MCEvents.VoteSessionClosedEvent(this, player, false));
+  public boolean cancel(PlayerData player) {
+    boolean canceled = super.cancel(player);
+    if (canceled) Events.fire(new MCEvents.VoteSessionClosedEvent(this, player, false));
+    return canceled;
   }
 }

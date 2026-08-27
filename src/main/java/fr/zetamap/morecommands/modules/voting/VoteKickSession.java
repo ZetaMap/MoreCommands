@@ -30,6 +30,10 @@ public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> 
     super(1 * 60, 2 * 60);
   }
 
+  public boolean start(PlayerData by, PlayerData target, String reason) {
+    return start(by, new Context(by, target, reason));
+  }
+
   @Override
   public boolean canStart(PlayerData player, Context reason) {
     if (PlayerData.size() < 3 && !player.admin()) {
@@ -41,7 +45,7 @@ public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> 
                   objective().target.getName());
       return false;
 
-    } else if (reason != null) {
+    } else if (reason != null) { // Can be null when checking for availability
       if (player == reason.target) {
         Players.err(player, "You can't vote to kick yourself.");
         return false;
@@ -74,7 +78,7 @@ public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> 
       Players.info(player, "You already voted to kick @[white].", objective().target.getName());
       return false;
     } else if (objective().target == player) {
-      Players.err(player, "You can't vote on your own trial.");
+      Players.err(player, "You can't vote for yourself.");
       return false;
     } else if (objective().target.player.team() != player.player.team()) {
       Players.err(player, "You can't vote for other teams.");
@@ -97,8 +101,9 @@ public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> 
 
   /** Vote cannot be forced. */
   @Override
-  public void force(PlayerData by) {
+  public boolean force(PlayerData by) {
     Players.err(by, "The vote cannot be forced, kick the player yourself instead.");
+    return false;
   }
 
   @Override
@@ -162,8 +167,8 @@ public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> 
       @ [lightgray]voted to @[lightgray]kick @[lightgray].
       @ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. \
       Type [orange]/vote y[] or [orange]/vote n[] to agree or not with him.""",
-      who.getName(), type.yes() ? "[]" : "[]not ", objective().target.getName(), "[]"+vote, "[]"+votes(),
-      "[]"+required()
+      who.getName(), type.yes() ? "[]" : "[]not ", objective().target.getName(), remaining(), "[]"+vote,
+      "[]"+votes(), "[]"+required()
     );
   }
 
@@ -178,7 +183,9 @@ public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> 
 
   public static class Context {
     public long kickDuration = Punishment.Type.kick.defaultDuration.duration;
-    public final PlayerData target, by;
+    public final PlayerData by;
+    /** Not final in case of votekick escape. */
+    public PlayerData target;
     public final String reason;
 
     public Context(PlayerData by, PlayerData target, String reason) {

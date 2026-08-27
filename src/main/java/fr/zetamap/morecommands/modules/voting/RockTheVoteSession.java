@@ -154,7 +154,8 @@ public class RockTheVoteSession extends PlayerVoteSession<Map> {
       @ voted to @change the map to @.
       @ more @ required [gray]([lightgray]@[gray]/[lightgray]@[gray])[white]. \
       Type [orange]/rtv y[] or [orange]/rtv n[] to agree or not with him.""",
-      who.getName(), type.yes() ? "[]" : "[]not ", objective().name(), "[]"+vote, "[]"+votes(), "[]"+required()
+      who.getName(), type.yes() ? "[]" : "[]not ", objective().name(), remaining(), "[]"+vote, "[]"+votes(),
+      "[]"+required()
     );
   }
 

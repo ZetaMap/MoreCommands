@@ -31,7 +31,7 @@ public class MCEvents {
   public static class PunishmentEvent {
     public final @Nullable PlayerData author, target;
     public final Punishment punishment;
-    
+
     public PunishmentEvent(PlayerData author, PlayerData target, Punishment punishment) {
       this.author = author;
       this.target = target;
@@ -42,7 +42,7 @@ public class MCEvents {
     public final @Nullable PlayerData author;
     public final Punishment punishment;
     public final Punishment.Pardon pardon;
-    
+
     public PunishmentPardonedEvent(PlayerData author, Punishment punishment, Punishment.Pardon pardon) {
       this.author = author;
       this.punishment = punishment;
@@ -54,14 +54,14 @@ public class MCEvents {
   public static class PunishmentExpiredEvent {
     public final PlayerData player;
     public final Punishment punishment;
-    
+
     public PunishmentExpiredEvent(PlayerData player, Punishment punishment) {
       this.player = player;
       this.punishment = punishment;
     }
   }
   */
-  
+
   public static class GatekeeperProcessStartedEvent {
     public final Gatekeeper.Context context;
 
@@ -75,11 +75,11 @@ public class MCEvents {
     public Gatekeeper.Priority priority;
     public Gatekeeper.Result result;
     public final Gatekeeper.Context context;
-    
+
     public GatekeeperProcessedEvent(Gatekeeper.Context context) {
       this.context = context;
     }
-    
+
     public GatekeeperProcessedEvent set(String name, Gatekeeper.Priority priority, Gatekeeper.Result result) {
       this.name = name;
       this.priority = priority;
@@ -87,21 +87,21 @@ public class MCEvents {
       return this;
     }
   }
-  
+
   public static class PlayerSwitchedEvent {
     public final PlayerData player;
     public final Server server;
-    
+
     public PlayerSwitchedEvent(PlayerData player, Server server) {
       this.player = player;
       this.server = server;
     }
   }
-  
+
   public static class VoteSessionStartedEvent {
     public final PlayerVoteSession<?> session;
     public final PlayerData author;
-    
+
     public VoteSessionStartedEvent(PlayerVoteSession<?> session, PlayerData author) {
       this.session = session;
       this.author = author;
@@ -111,7 +111,7 @@ public class MCEvents {
     public final PlayerVoteSession<?> session;
     public final PlayerVoteSession.VoteType type;
     public final PlayerData player;
-    
+
     public VoteSessionVotedEvent(PlayerVoteSession<?> session, VoteType type, PlayerData player) {
       this.session = session;
       this.type = type;
@@ -122,16 +122,31 @@ public class MCEvents {
     public final PlayerVoteSession<?> session;
     public final @Nullable PlayerData author;
     public final boolean passed;
-    
+
     public VoteSessionClosedEvent(PlayerVoteSession<?> session, PlayerData author, boolean passed) {
       this.session = session;
       this.author = author;
       this.passed = passed;
     }
-    
+
     public boolean passed() { return passed && author == null; }
     public boolean forced() { return passed && author != null; }
     public boolean failed() { return !passed && author == null; }
     public boolean canceled() { return !passed && author != null; }
+  }
+
+  /** Triggered when someone reconnect after being targeted by votekick. Usually, this doubles the punishment. */
+  public static class VoteKickEscapeEvent {
+    public final PlayerData by, target;
+    /** Previous {@link #target} object. Can be used for deep validation. */
+    public final PlayerData previous;
+    public final String reason;
+
+    public VoteKickEscapeEvent(PlayerData by, PlayerData target, PlayerData previous, String reason) {
+      this.by = by;
+      this.target = target;
+      this.previous = previous;
+      this.reason = reason;
+    }
   }
 }

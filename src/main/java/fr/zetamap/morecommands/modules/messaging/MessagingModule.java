@@ -170,7 +170,7 @@ public class MessagingModule extends AbstractModule {
         return;
       }
 
-      logger.info("Chat @ by '@' (@).", chatEnabled ? "enabled" : "disabled", player.stripedName, player.player.uuid());
+      logger.info("Chat @ by '@' (@).", chatEnabled ? "enabled" : "disabled", player.stripedName, player);
       if (old != chatEnabled)
         serverWarn("Chat", "@ by @.", chatEnabled ? "Enabled" : "Disabled", player.getName());
     });

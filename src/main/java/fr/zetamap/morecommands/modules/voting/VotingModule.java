@@ -30,10 +30,10 @@ import mindustry.net.Administration.Config;
 
 import fr.zetamap.morecommands.PlayerData;
 import fr.zetamap.morecommands.command.*;
+import fr.zetamap.morecommands.misc.MCEvents;
 import fr.zetamap.morecommands.misc.Players;
 import fr.zetamap.morecommands.module.AbstractModule;
-import fr.zetamap.morecommands.util.IntervalProv;
-import fr.zetamap.morecommands.util.Strings;
+import fr.zetamap.morecommands.util.*;
 
 
 public class VotingModule extends AbstractModule {
@@ -51,13 +51,33 @@ public class VotingModule extends AbstractModule {
       // Disable votes
       canVote = false;
       // Stop votes
-      rtvSession.cancel();
+      rtvSession.cancel(); // #stop() instead?
       vnwSession.cancel();
     });
 
     Events.on(EventType.WorldLoadEvent.class, e -> {
       // Enable votes
       canVote = true;
+    });
+
+    // Check for votekick escape
+    Events.on(EventType.PlayerJoin.class, e -> {
+      PlayerData player = PlayerData.get(e.player);
+      if (!vkSession.started() || !vkSession.objective().target.uuid.equals(player.uuid)) return;
+      VoteKickSession.Context context = vkSession.objective();
+      PlayerData previous = context.target;
+      long lastDuration = context.kickDuration;
+      context.target = player;
+      context.kickDuration *= 2; //TODO: option for that?
+      Events.fire(new MCEvents.VoteKickEscapeEvent(context.by, player, previous, context.reason));
+
+      // Notify player and online admins
+      Players.warn(player, "You tried to escape a votekick! The punishment has been doubled.");
+      PlayerData.each(PlayerData::admin, p ->
+        Players.warn(p, "@ [orange] tried to escape a votekick! "
+                      + "[gray]Kick duration: [lightgray]@[] -> [lightgray]@[].",
+                     player.getName(), DurationFormatter.format(lastDuration),
+                     DurationFormatter.format(context.kickDuration)));
     });
 
     Events.on(EventType.PlayerLeave.class, e -> {
@@ -70,8 +90,8 @@ public class VotingModule extends AbstractModule {
 
     // Players who are currently being voted on can no longer interact, to prevent griefing.
     Vars.netServer.admins.addActionFilter(a -> {
-      return getrate(a.player).get(messageRateLimit, () -> {
-        if (vkSession.started() && vkSession.objective().target.player == a.player) {
+      return !vkSession.started() || getrate(a.player).get(messageRateLimit, () -> {
+        if (vkSession.objective().target.player == a.player) {
           Players.err(a.player, "You are currently being voted in. \n"
                               + "You can no longer interact with the game elements until the vote ends.");
           return false;
@@ -105,7 +125,7 @@ public class VotingModule extends AbstractModule {
         StringBuilder builder = new StringBuilder("[orange]Players to kick: \n");
         PlayerData.each(p -> !p.admin() && p.player.con != null && p != player, p -> {
             builder.append(" [orange]- ").append(p.getName());
-            if (player.admin()) builder.append(" [orange]/ [lightgray]").append(p.player.uuid());
+            if (player.admin()) builder.append(" [orange]/ [lightgray]").append(p);
             builder.append(" [accent](#").append(p.player.id()).append(")[]\n");
         });
         Players.info(player, builder.toString());
@@ -116,10 +136,11 @@ public class VotingModule extends AbstractModule {
       if (!result.found) Players.errPlayerNotFound(player);
       else if (result.rest.length == 0)
         Players.warn(player, "You need a valid reason to kick the player.[] Add a reason after the player name.");
-      else vkSession.start(player, new VoteKickSession.Context(player, result.player, Strings.join(" ", result.rest)));
+      else vkSession.start(player, result.player, Strings.join(" ", result.rest));
     });
 
-    handler.add("vote", "<y|n|c>", "Vote to kick the current player. Admins can cancel the vote with 'c'.", (args, player) -> {
+    handler.add("vote", "<y|n|c>", "Vote to kick the current player. Admins can cancel the vote with 'c'.",
+    (args, player) -> {
       if (!canVote) {
         Players.err(player, "Votes are disabled for now, please wait.");
         return;
@@ -146,7 +167,7 @@ public class VotingModule extends AbstractModule {
           pages = Mathf.ceil((float)Vars.maps.all().size / perPage);
 
       if (page > pages || page < 1) {
-        Players.err(player, "'[orange]page[]' must be a number between [orange]1[] and [orange]" + pages + "[].");
+        Players.err(player, "'[orange]@[]' must be a number between [orange]@[] and [orange]@[].", "page", "1", pages);
         return;
       }
 

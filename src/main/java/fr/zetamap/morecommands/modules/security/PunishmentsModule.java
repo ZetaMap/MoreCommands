@@ -134,7 +134,7 @@ public class PunishmentsModule extends AbstractSaveableModule {
 
   /** Get all punishments of a player. Or {@code null} if never punished. */
   public Seq<Punishment> get(PlayerData player) {
-    return get(player.player.uuid());
+    return get(player.uuid);
   }
 
   /** Get all {@code type} punishments of an address. Or {@code null} if never punished. */
@@ -156,7 +156,7 @@ public class PunishmentsModule extends AbstractSaveableModule {
 
   /** Get the last not pardoned or expired punishment of the specified type of a player. */
   public Punishment last(PlayerData player, Punishment.Type type) {
-    return last(player.player.uuid(), type);
+    return last(player.uuid, type);
   }
 
   /** Get the last not pardoned and expired punishment of a player. */
@@ -167,7 +167,7 @@ public class PunishmentsModule extends AbstractSaveableModule {
 
   /** Get the last not pardoned and expired punishment of a player. */
   public Punishment last(PlayerData player) {
-    return last(player.player.uuid());
+    return last(player.uuid);
   }
 
   /** Get the last not pardoned and expired punishment of the specified type of an address. */
@@ -189,7 +189,7 @@ public class PunishmentsModule extends AbstractSaveableModule {
 
   /** @return whether the player is currently punished of something. */
   public boolean isPunished(PlayerData player) {
-    return isPunished(player.player.uuid());
+    return isPunished(player.uuid);
   }
 
   /** @return whether the address is currently punished of something. */
@@ -223,7 +223,7 @@ public class PunishmentsModule extends AbstractSaveableModule {
 
   /** @return the latest active punishments of the player. (always returns the same array instance) */
   public Punishment[] current(PlayerData player) {
-    return current(player.player.uuid());
+    return current(player.uuid);
   }
 
   /** @return the latest active punishments of an address. (always returns the same array instance) */
@@ -243,7 +243,7 @@ public class PunishmentsModule extends AbstractSaveableModule {
       // Only take if one result found
       if (found.size == 1) target = found.first().id;
     }
-    Punishment p = new Punishment(author == null ? null : author.player.uuid(), target, address, type, duration, reason);
+    Punishment p = new Punishment(author == null ? null : author.uuid, target, address, type, duration, reason);
     byId.put(p.id, p);
     if (target != null) byPlayer.get(target, Seq::new).add(p);
     if (address != null) byAddress.get(address, Seq::new).add(p);
@@ -259,7 +259,7 @@ public class PunishmentsModule extends AbstractSaveableModule {
 
   /** Punish a player of something. */
   public Punishment punish(PlayerData author, PlayerData target, Punishment.Type type, String reason) {
-    return punish(author, target.player.uuid(), target, target.player.ip(), type, type.defaultDuration.duration, reason);
+    return punish(author, target.uuid, target, target.player.ip(), type, type.defaultDuration.duration, reason);
   }
 
   /** Punish a player of something. */
@@ -270,7 +270,7 @@ public class PunishmentsModule extends AbstractSaveableModule {
 
   /** Punish a player of something. */
   public Punishment punish(PlayerData author, PlayerData target, Punishment.Type type, long duration, String reason) {
-    return punish(author, target.player.uuid(), target, target.player.ip(), type, duration, reason);
+    return punish(author, target.uuid, target, target.player.ip(), type, duration, reason);
   }
 
   /** Punish a player of something. */
@@ -282,13 +282,13 @@ public class PunishmentsModule extends AbstractSaveableModule {
   /** Punish a player of something. */
   public Punishment punish(PlayerData author, PlayerData target, Punishment.Type type, PunishmentDuration duration,
                            String reason) {
-    return punish(author, target.player.uuid(), target.player.ip(), type, duration.duration, reason);
+    return punish(author, target.uuid, target.player.ip(), type, duration.duration, reason);
   }
 
   /** @return {@code true} if pardoned, else {@code false} if already pardoned.*/
   public boolean pardon(PlayerData author, Punishment punishment, String reason) {
     if (punishment.pardoned()) return false;
-    punishment.pardon = new Punishment.Pardon(author == null ? null : author.player.uuid(), reason);
+    punishment.pardon = new Punishment.Pardon(author == null ? null : author.uuid, reason);
     setModified();
     Events.fire(new MCEvents.PunishmentPardonedEvent(author, punishment, punishment.pardon));
     return true;
@@ -462,7 +462,7 @@ public class PunishmentsModule extends AbstractSaveableModule {
         OrderedMap.Entries<PlayerData, Vec2> it = currentlyFrozen.entries();
         while (it.hasNext()) {
           OrderedMap.Entry<PlayerData, Vec2> e = it.next();
-          if (!is(e.key.player.uuid(), Punishment.Type.freeze)) it.remove();
+          if (!is(e.key.uuid, Punishment.Type.freeze)) it.remove();
         }
       }
 

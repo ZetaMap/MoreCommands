@@ -139,14 +139,14 @@ public class MiscModule extends AbstractModule {
     Vars.state.rules = Vars.state.map.applyRules(mode);
     if (Vars.state.rules.pvp) Groups.player.each(Vars.netServer::assignTeam);
     else if (wasPvp) Groups.player.each(p -> p.team(Vars.state.rules.defaultTeam));
-    Modules.worldEdit.sendWorld();
+    Call.setRules(Vars.state.rules);
+    //Modules.worldEdit.sendWorld();
   }
 
   public boolean syncPlayer(PlayerData player) {
     if(Time.timeSinceMillis(player.player.getInfo().lastSyncTime) < 1000 * 5) return false;
     player.player.getInfo().lastSyncTime = Time.millis();
-    Call.worldDataBegin(player.player.con);
-    Vars.netServer.sendWorldData(player.player);
+    Modules.worldEdit.sendWorld(player);
     return true;
   }
 
@@ -184,9 +184,8 @@ public class MiscModule extends AbstractModule {
 
   @Override
   public void registerServerCommands(ServerCommandHandler handler) {
-    handler.add("restart",
-                "Reconnects players and exits the server with code '2', to ask a restart from the launcher script.",
-    args -> {
+    handler.add("restart", "Reconnects players and exits the server with code '2', "
+                         + "to ask a restart from the launcher script.", args -> {
       if (!reconnectSupported)
         logger.warn("'@' is not supported due to another mod/plugin overriding '@'.", reconnectOnExit.name,
                     "Vars.net.provider");

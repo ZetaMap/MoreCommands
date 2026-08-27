@@ -92,7 +92,7 @@ public class ModerationModule extends AbstractModule {
       args.add(punishment.address);
     } else {
       builder.append(executor == null ? "@ [@]" : "[accent]@[green] [gray][[[lightgray]@[]][]");
-      if (target != null) args.add(target.stripedName, target.player.uuid());
+      if (target != null) args.add(target.stripedName, target.uuid);
       else args.add(Players.getLastName(reason, executor == null), punishment.target);
     }
 
@@ -187,7 +187,7 @@ public class ModerationModule extends AbstractModule {
         if (executor == null) logger.err("No player found with name or uuid '@'.", args[0]);
         else Players.err(executor, "No player found with name or uuid '[orange]@[]'.", args[0]);
         return;
-      } else if (executor != null && executor.player.uuid().equals(info.id)) {
+      } else if (executor != null && executor.uuid.equals(info.id)) {
         Players.err(executor, "You cannot punish yourself.");
         return;
       }
@@ -298,9 +298,9 @@ public class ModerationModule extends AbstractModule {
         p = Modules.punishments.last(result.player, kind);
         if (p == null) {
           if (executor == null)
-            logger.err("@ [@] is not currently @.", result.player.stripedName, result.player.player.uuid(), kind.verb);
+            logger.err("@ [@] is not currently @.", result.player.stripedName, result.player.uuid, kind.verb);
           else Players.err(executor, "@[scarlet] [gray][[[lightgray]@[]][] is not currently [orange]@[].",
-                           result.player.getName(), result.player.player.uuid(), kind.verb);
+                           result.player.getName(), result.player.uuid, kind.verb);
           return;
         }
 
@@ -341,7 +341,7 @@ public class ModerationModule extends AbstractModule {
     if (kind == null) {
       if (punishments == null || punishments.isEmpty()) {
         Players.info(executor, "[gold]@ was never punished.",
-                     target != null && target.equals(executor.player.uuid()) ? "You" : "The player");
+                     target != null && target.equals(executor.uuid) ? "You" : "The player");
         return;
       }
 

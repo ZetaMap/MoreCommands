@@ -49,12 +49,13 @@ public class PlayerData {
   /** In fact there is no dedicated "vanish" team, so just transfer to {@code team#255}. */
   public static final Team vanishTeam = Team.get(Team.all.length-1);
 
-  protected static final IntMap<PlayerData> map = new IntMap<>();
-  protected static final Seq<PlayerData> array = new Seq<>(false);
+  protected static final IntMap<PlayerData> map = new IntMap<>(32);
+  protected static final Seq<PlayerData> array = new Seq<>(false, 32);
 
   public final Player player;
   /** The player uuid without the checksum part. So on 8 bytes instead of 16. */
   public final String shortUuid;
+  public final String uuid;
 
   /** Used to properly dereference the player whispers. Nulled to know when the player never whispered. */
   protected ObjectSet<PlayerData> whispers;
@@ -69,6 +70,7 @@ public class PlayerData {
   private PlayerData(Player player) {
     this.player = player;
     shortUuid = getShortUuid(player.uuid());
+    uuid = player.uuid();
     realName = player.name;
     uncoloredName = Strings.stripColors(player.name).strip();
     stripedName = Strings.stripGlyphs(uncoloredName).strip();
@@ -160,6 +162,11 @@ public class PlayerData {
     return player.admin;
   }
 
+  @Override
+  public String toString() {
+    return player.uuid();
+  }
+
   // Players messaging shortcuts
   public void errPlayerNotFound() { Players.errPlayerNotFound(this); }
   public void errArgUseDenied() { Players.errArgUseDenied(this); }
@@ -188,7 +195,7 @@ public class PlayerData {
   }
 
   public static PlayerData get(String uuid) {
-    return uuid == null ? null : array.find(p -> p.player.uuid().equals(uuid));
+    return uuid == null ? null : array.find(p -> p.uuid.equals(uuid));
   }
 
   public static PlayerData add(Player player) {
@@ -249,7 +256,7 @@ public class PlayerData {
     /**
      * Hash of my uuid. <br>
      * Used to show me a message when i join a server that have my plugin. <br>
-     * For a little bit of telemetry.
+     * For a little bit of telemetry. =)
      */
     final byte[] creatorID = Base64Coder.decode("Ti+DuluMiMUn1h93Ly1CAfI+cCld6fp29qw7B3Carzk=");
     MessageDigest h;
@@ -274,7 +281,7 @@ public class PlayerData {
     Events.on(EventType.PlayerLeave.class, e -> {
       // Restore the player name for the disconnect message.
       e.player.name = PlayerData.get(e.player).realName;
-      // Delay removal to let time to others components to handle the event.
+      // Delay removal to let others components handle the event.
       Core.app.post(() -> PlayerData.remove(e.player));
     });
 

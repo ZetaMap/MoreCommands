@@ -96,7 +96,7 @@ public class Players {
   public static SearchResult findByUUID(String[] args, int from, int to) {
     if (args.length == 0 || from < 0 || to > args.length || from >= to) return new SearchResult(null, args);
     if (args[from].length() < 10 || args[from].length() > 25) return new SearchResult(null, copyIfNeeded(args, from, to));
-    return new SearchResult(PlayerData.find(p -> p.player.uuid().equals(args[from]) || p.shortUuid.equals(args[from])),
+    return new SearchResult(PlayerData.find(p -> p.uuid.equals(args[from]) || p.shortUuid.equals(args[from])),
                             copyIfNeeded(args, from+1, to));
   }
 

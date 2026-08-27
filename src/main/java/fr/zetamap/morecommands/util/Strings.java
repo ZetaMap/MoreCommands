@@ -104,9 +104,9 @@ public class Strings extends arc.util.Strings {
   public static Seq<String> sJust(Seq<String> left, Seq<String> right, int length) { return sJust(left, right, length, " "); }
   public static Seq<String> sJust(Seq<String> left, Seq<String> right, int length, String filler) {
     Seq<String> arr = /*new Seq<>(Integer.max(left.size, right.size))*/left; // for optimization, the left side will be used
-    int i = 0;
+    int i = 0, min = Integer.min(left.size, right.size);
 
-    for (; i<Integer.min(left.size, right.size); i++) arr.set(i, /*.add(*/sJust(left.get(i), right.get(i), length, filler));
+    for (; i<min; i++) arr.set(i, /*.add(*/sJust(left.get(i), right.get(i), length, filler));
     // Fill the rest
     for (; i<left.size; i++) arr.set(i, /*.add(*/lJust(left.get(i), length, filler));
     for (; i<right.size; i++) arr.add(rJust(right.get(i), length, filler));
