@@ -29,11 +29,13 @@ import arc.struct.IntMap;
 import arc.struct.ObjectSet;
 import arc.struct.Seq;
 import arc.util.serialization.Base64Coder;
+import arc.util.Timer;
 
 import mindustry.Vars;
 import mindustry.game.EventType;
 import mindustry.game.Team;
 import mindustry.gen.Call;
+import mindustry.gen.Groups;
 import mindustry.gen.Player;
 import mindustry.gen.Unit;
 import mindustry.net.Packets.KickReason;
@@ -286,6 +288,25 @@ public class PlayerData {
       // Delay removal to let others components handle the event.
       Core.app.post(() -> PlayerData.remove(e.player));
     });
+
+    Timer.schedule(() -> {
+      Seq<PlayerData> stale = new Seq<>();
+
+      PlayerData.each(data -> {
+        Player current = Groups.player.getByID(data.player.id);
+
+        if (current != data.player) {
+          stale.add(data);
+        }
+      });
+
+      stale.each(data -> {
+
+        data.player.name = data.realName;
+
+        PlayerData.remove(data.player);
+      });
+    }, 1f, 10f);
 
     Events.on(EventType.ConnectPacketEvent.class, e ->
       e.connection.uuid = e.packet.uuid // Fixes uuid not showing on the console when kicking a player

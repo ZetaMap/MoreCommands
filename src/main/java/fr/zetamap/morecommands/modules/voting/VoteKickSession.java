@@ -106,7 +106,7 @@ public class VoteKickSession extends PlayerVoteSession<VoteKickSession.Context> 
   @Override
   public int required() {
     // from https://github.com/xpdustry/imperium/blob/master/imperium-mindustry/src/main/kotlin/com/xpdustry/imperium/mindustry/security/VoteKickCommand.kt#L238
-    int players = PlayerData.size();
+    int players = PlayerData.count(p ->p.player.team() == objective().target.player.team());
     return players < 4 ? 2 : players < 5 ? 3 : players < 21 ? (int)Math.ceil(players/2f) : 10;
   }
 
