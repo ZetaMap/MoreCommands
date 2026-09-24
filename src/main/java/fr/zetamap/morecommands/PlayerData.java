@@ -160,6 +160,18 @@ public class PlayerData {
     return player.admin;
   }
 
+  public boolean dead() {
+    return player.dead();
+  }
+
+  public Unit unit() {
+    return player.unit();
+  }
+
+  public Team team() {
+    return player.team();
+  }
+
   @Override
   public String toString() {
     return player.uuid();

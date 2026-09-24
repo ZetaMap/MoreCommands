@@ -78,11 +78,11 @@ public class WorldEditModule extends AbstractModule {
 
   /** @return {@code null} if unable to transform player, probably due to a unit cap reached, else the new player unit. */
   public Unit transformPlayer(PlayerData player, UnitType unit) {
-    Position p = player.player.dead() ? player.player.closestCore() : player.player;
+    Position p = player.dead() ? player.player.closestCore() : player.player;
     if (p == null) return null;
-    Unit u = unit.spawn(player.player.team(), p);
+    Unit u = unit.spawn(player.team(), p);
     if (!u.isValid()) return null;
-    if (!player.player.dead()) u.rotation = player.player.unit().rotation;
+    if (!player.dead()) u.rotation = player.player.unit().rotation;
     u.controller(player.player);
     u.spawnedByCore = true; // this is a temporary unit
     return u;
@@ -195,7 +195,7 @@ public class WorldEditModule extends AbstractModule {
   public void sendEntitySnapshot(PlayerData player) {
     try {
       Vars.netServer.writeStateSnapshot(); // This will send to all players but this is not important
-      Vars.netServer.writeEntitySnapshotsTeam(player.player.team(), Seq.with(player.player));
+      Vars.netServer.writeEntitySnapshotsTeam(player.team(), Seq.with(player.player));
       if (player.player.con.localEntities.size > 0)
         Vars.netServer.writeCustomEntitySnapshot(player.player, player.player.con.localEntities);
     } catch (Exception e) {
@@ -299,7 +299,7 @@ public class WorldEditModule extends AbstractModule {
       }
 
       Tile tile = player.player.tileOn();
-      Team team = player.player.team();
+      Team team = player.team();
       JsonValue data = null;
       if (args.length > 1) {
         TargetResult dest = Modules.selector.parseOne(player, args, 1, args.length);
@@ -317,7 +317,7 @@ public class WorldEditModule extends AbstractModule {
           if (block.hasBuilding()) data = parseJson(player, args, 1, args.length);
           if (!checkBuildingData(player, block, team, data)) return;
         }
-      } else if (player.player.dead()) {
+      } else if (player.dead()) {
         player.err("Unable to find player position.");
         return;
       }
@@ -327,8 +327,8 @@ public class WorldEditModule extends AbstractModule {
         return;
       }
       Building last = tile.build;
-      if (block == Blocks.air) Call.deconstructFinish(tile, block, player.player.unit()); //tile.removeNet()
-      else ConstructBlock.constructed(tile, block, player.player.unit(), (byte)0, team, null);
+      if (block == Blocks.air) Call.deconstructFinish(tile, block, player.unit()); //tile.removeNet()
+      else ConstructBlock.constructed(tile, block, player.unit(), (byte)0, team, null);
 
       String article = Strings.articleFor(block.name);
       if (block == Blocks.air)
@@ -367,7 +367,7 @@ public class WorldEditModule extends AbstractModule {
       if (dest == null) return;
       args = dest.rest;
 
-      Team team = args.length == 0 ? player.player.team() : Modules.team.getTeam(player, args[0]);
+      Team team = args.length == 0 ? player.team() : Modules.team.getTeam(player, args[0]);
       if (team == null) {
         player.err("Team not found. [gray]Use [lightgray]/team[] to list them.");
         return;
@@ -391,7 +391,7 @@ public class WorldEditModule extends AbstractModule {
             if (tile == null) continue;
             if (tile.build != null) count++;
             //tile.removeNet();
-            Call.deconstructFinish(tile, block, player.player.unit());
+            Call.deconstructFinish(tile, block, player.unit());
           }
         }
         player.ok("Removed @ blocks from @[],@ to @[],@.", count, x, y, xn, yn);
@@ -401,7 +401,7 @@ public class WorldEditModule extends AbstractModule {
           for (yy=y; yy<yn; yy+=block.size) {
             tile = Vars.world.tile(xx, yy);
             if (tile == null) continue;
-            ConstructBlock.constructed(tile, block, player.player.unit(), (byte)0, team, null);
+            ConstructBlock.constructed(tile, block, player.unit(), (byte)0, team, null);
             if (!block.hasBuilding() ||
                 tile.block() == block && tile.build != null && tile.build.isValid()) count++;
           }
@@ -467,7 +467,7 @@ public class WorldEditModule extends AbstractModule {
       }
 
       Tile tile = player.player.tileOn();
-      Team team = player.player.team();
+      Team team = player.team();
       if (args.length > 1) {
         TargetResult dest = Modules.selector.parseOne(player, args, 1, args.length);
         if (dest == null) return;
@@ -479,7 +479,7 @@ public class WorldEditModule extends AbstractModule {
           player.err("Team not found. [gray]Use [lightgray]/team[] to list them.");
           return;
         }
-      } else if (player.player.dead()) {
+      } else if (player.dead()) {
         player.err("Unable to find player position.");
         return;
       }
@@ -488,7 +488,7 @@ public class WorldEditModule extends AbstractModule {
         player.err("Coordinates out of map bounds.");
         return;
       }
-      ConstructBlock.constructed(tile, core, player.player.unit(), (byte)0, team, null);
+      ConstructBlock.constructed(tile, core, player.unit(), (byte)0, team, null);
       player.ok("Built a @ at @[],@ for the @ team.", core.name, tile.x, tile.y, team.coloredName());
     });
 
@@ -511,7 +511,7 @@ public class WorldEditModule extends AbstractModule {
 
       Position pos = player.player;
       Point2 wpos = CoordinatesParser.toWorld(pos);
-      Team team = player.player.team();
+      Team team = player.team();
       JsonValue data = null;
 
       if (args.length > 2) {
@@ -531,7 +531,7 @@ public class WorldEditModule extends AbstractModule {
           data = parseJson(player, args, 1, args.length);
           if (!checkUnitData(player, unit, team, data)) return;
         }
-      } else if (player.player.dead()) {
+      } else if (player.dead()) {
         player.err("Unable to find player position.");
         return;
       }
@@ -575,14 +575,14 @@ public class WorldEditModule extends AbstractModule {
         player.err("No unit named '@' found.", args[0]);
         return;
       } else if (player.player.core() == null) {
-        player.err("No core available in the @ team.", player.player.team().coloredName());
+        player.err("No core available in the @ team.", player.team().coloredName());
         return;
       }
 
       String article = Strings.articleFor(unit.name);
 
       if (args.length == 1) {
-        if (player.player.dead()) {
+        if (player.dead()) {
           player.err("Unable to locate @ unit.", "your");
           return;
         } else if (transformPlayer(player, unit) != null)
@@ -597,12 +597,12 @@ public class WorldEditModule extends AbstractModule {
       JsonValue data = null;
       if (selector.rest.length > 0) {
         data = parseJson(player, selector.rest, 0, selector.rest.length);
-        if (!checkUnitData(player, unit, player.player.team(), data)) return;
+        if (!checkUnitData(player, unit, player.team(), data)) return;
       }
 
       Seq<Unit> transformed = new Seq<>(selector.selected.size);
       selector.execute((p, u) -> {
-        if (player.player.dead()) {
+        if (player.dead()) {
           player.err("Unable to locate @'s unit.", p.getName());
           return;
         }
@@ -636,8 +636,8 @@ public class WorldEditModule extends AbstractModule {
 
     handler.addAdmin("kill", "[player|selector...] ", "Kill a player or a unit.", (args, player) -> {
       if (args.length == 0) {
-        if (!player.player.dead()) {
-          player.player.unit().kill();
+        if (!player.dead()) {
+          player.unit().kill();
           player.ok("Killed @.", "yourself");
         } else player.warn("Your already dead. =/");
         return;

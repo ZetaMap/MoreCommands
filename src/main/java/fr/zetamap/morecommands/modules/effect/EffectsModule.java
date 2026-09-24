@@ -181,7 +181,7 @@ public class EffectsModule extends AbstractSaveableModule {
         p.setName();
 
         // Beautiful rainbow trail =)
-        if (p.player.dead()) return;
+        if (p.dead()) return;
         float rotationBack = p.player.unit().rotation + 180,
               x = p.player.x + Angles.trnsx(rotationBack, effectOffset),
               y = p.player.y + Angles.trnsy(rotationBack, effectOffset);

@@ -55,9 +55,9 @@ public class GodmodeModule extends AbstractModule {
       PlayerData p = PlayerData.get(a.player);
       if (p != null && p.inGodmode) {
         if (a.type == ActionType.placeBlock)
-          ConstructBlock.constructed(a.tile, a.block, a.player.unit(), (byte)a.rotation, a.player.team(), a.config);
+          ConstructBlock.constructed(a.tile, a.block, p.unit(), (byte)a.rotation, p.team(), a.config);
         else if (a.type == ActionType.breakBlock)
-          Call.deconstructFinish(a.tile, a.block, a.player.unit());
+          Call.deconstructFinish(a.tile, a.block, p.unit());
       }
       return true;
     });

@@ -105,7 +105,7 @@ public class TeleportModule extends AbstractModule {
       } else {
         TargetResult dest = Modules.selector.parseOne(player, args);
         if (dest == null) return;
-        if (!player.player.dead()) {
+        if (!player.dead()) {
           teleport(player, dest.pos);
           player.ok("You teleported to @.", dest.formatColors());
         } else player.err("Unable to locate @ position.", "your");
