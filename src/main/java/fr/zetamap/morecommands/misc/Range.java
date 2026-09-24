@@ -17,7 +17,7 @@
  */
 
 
-package fr.zetamap.morecommands.modules.selector.util;
+package fr.zetamap.morecommands.misc;
 
 
 public interface Range<T extends Comparable<T>> {

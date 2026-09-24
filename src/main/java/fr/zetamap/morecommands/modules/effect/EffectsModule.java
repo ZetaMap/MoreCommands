@@ -334,7 +334,7 @@ public class EffectsModule extends AbstractSaveableModule {
         p.ok("Rainbow effect @ by @.", p.rainbowed ? "enabled" : "disabled", player.getName());
       });
       if (selector.noTargetFound()) player.ok("No players was selected.");
-      else player.ok("@ rainbow effect @.", enable ? "Enabled" : "Disabled", "[]" + selector.formatMessage("for", true));
+      else player.ok("@ rainbow effect @.", enable ? "Enabled" : "Disabled", "[]" + selector.formatColorMessage("for"));
     });
 
     handler.add("effect", "[stop|list|search|name|id] [page|selector|player...]", "Gives you a particle effect.",
@@ -503,9 +503,9 @@ public class EffectsModule extends AbstractSaveableModule {
         else p.ok("Particle effect @ (@) started by @.", p.effect.name, p.effect.id, player.getName());
       });
       if (selector.noTargetFound()) player.ok("No player was selected.");
-      else if (effect == null) player.ok("Removed particle effect @.", "[]" + selector.formatMessage("from", true));
+      else if (effect == null) player.ok("Removed particle effect @.", "[]" + selector.formatColorMessage("from"));
       else player.ok("Starting particle effect @ (@) @.", effect.name, effect.id,
-                     "[]" + selector.formatMessage("for", true));
+                     "[]" + selector.formatColorMessage("for"));
     });
 
     //IDEA: /sound

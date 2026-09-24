@@ -354,12 +354,11 @@ public class Strings extends arc.util.Strings {
   /**
    * Compare if {@code newVersion} is greater or less than {@code currentVersion}, e.g. "v146" > "124.1". <br>
    * {@code maxDepth} defines the number of comparisons of version segments, allowing sub-versions to be ignored.
-   * (default is 0)
-   *
-   * @apiNote can handle dots and dashes in the version and makes very fast comparison. <br>
-   *          Also ignores non-int parts. (e.g. {@code "v1.2-rc36"}, the {@code "rc36"} part will be ignored)
+   * (default is {@code 0})
+   * <p>
+   * Can handle dots and dashes in the version, and makes very fast comparison. <br>
+   * Also ignores non-digit parts: {@code "v1.2-rc36"}, the {@code "v"} and {@code "rc36"} parts will be ignored
    */
-  @SuppressWarnings("null")
   public static int compareVersion(String currentVersion, String newVersion, int maxDepth) {
     if (maxDepth < 1) maxDepth = Integer.MAX_VALUE;
 
@@ -564,9 +563,7 @@ public class Strings extends arc.util.Strings {
 
   /** Like {@link String#join(CharSequence, CharSequence[])} but you can specify the start and end of the list. */
   public static String join(CharSequence delimiter, CharSequence[] elements, int start, int end) {
-    if (elements == null || delimiter == null) return null;
-    if (elements.length == 0 || start < 0 || end > elements.length || start >= end) return "";
-
+    if (delimiter == null || Structs.checkPos(elements, start, end)) return "";
     StringJoiner joiner = new StringJoiner(delimiter);
     for (int i=start; i<end; i++) joiner.add(elements[i]);
     return joiner.toString();
@@ -619,7 +616,7 @@ public class Strings extends arc.util.Strings {
                                 aExceptions = {"uni", "use", "one", "ut", "eu"};
 
   /** This is not totally great, but it do the job most of the time. */
-  public static String aOrAn(String adjective) {
+  public static String articleFor(String adjective) {
     if (adjective == null || adjective.isEmpty()) return "";
     // exceptions
     if (Structs.contains(anExceptions, adjective::startsWith)) return "an";
@@ -641,5 +638,7 @@ public class Strings extends arc.util.Strings {
     return vowels.indexOf(letter) != -1 ^ reversed ? "an" : "a";
   }
 
-
+  public static boolean checkStringArray(String[] arr, int from, int to) {
+    return Structs.checkPos(arr, from, to) || arr[from].isEmpty();
+  }
 }

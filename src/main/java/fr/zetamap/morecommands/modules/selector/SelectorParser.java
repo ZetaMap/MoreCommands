@@ -1,6 +1,6 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
- * Copyright (c) 2021-2025  ZetaMap
+ * Copyright (c) 2021-2026  ZetaMap
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,6 @@
 
 package fr.zetamap.morecommands.modules.selector;
 
-import java.util.regex.Pattern;
-
 import arc.func.Cons2;
 import arc.struct.ObjectMap;
 import arc.struct.Seq;
@@ -33,28 +31,36 @@ import fr.zetamap.morecommands.util.Strings;
 
 
 public class SelectorParser {
-  private static final Pattern quotes = Pattern.compile("'(.*?)'");
-
   public final PlayerData executor, target;
   public final Selector selector;
-  public final boolean onlyPlayers, byPlayer;
+  public final boolean onlyPlayers, onlyOne, byPlayer;
   public final ObjectMap<String, SelectorProperty.Parsed> properties;
   public final Seq<Unit> selected;
   public final String[] rest;
 
-  public SelectorParser(PlayerData executor, String[] args, boolean onlyPlayers)
+  public SelectorParser(PlayerData executor, String[] args)
   throws IllegalArgumentException, StringReader.ParseException {
-    this(executor, args, 0, args.length, onlyPlayers);
+    this(executor, args, false, false);
   }
 
-  //TODO: want one
-  public SelectorParser(PlayerData executor, String[] args, int from, int to, boolean onlyPlayers)
+  public SelectorParser(PlayerData executor, String[] args, boolean onlyPlayers)
   throws IllegalArgumentException, StringReader.ParseException {
-    if (args.length == 0 || from < 0 || to > args.length || from >= to || args[from].isEmpty())
-      throw new IllegalArgumentException("Missing player name/uuid or selector");
+    this(executor, args, onlyPlayers, false);
+  }
+
+  public SelectorParser(PlayerData executor, String[] args, boolean onlyPlayers, boolean onlyOne)
+  throws IllegalArgumentException, StringReader.ParseException {
+    this(executor, args, 0, args.length, onlyPlayers, onlyOne);
+  }
+
+  public SelectorParser(PlayerData executor, String[] args, int from, int to, boolean onlyPlayers, boolean onlyOne)
+  throws IllegalArgumentException, StringReader.ParseException {
+    if (Strings.checkStringArray(args, from, to))
+      throw new IllegalArgumentException("Missing player name/unitID/uuid or selector");
 
     this.executor = executor;
     this.onlyPlayers = onlyPlayers;
+    this.onlyOne = onlyOne;
 
     if (!Selectors.isSelector(args[from])) {
       Players.SearchResult result = Players.find(args, from, to);
@@ -64,43 +70,52 @@ public class SelectorParser {
       selected = null;
       target = result.player;
       rest = result.rest;
+      if (target == null) throw new IllegalArgumentException("Player not found");
       return;
     }
 
     target = null;
     byPlayer = false;
     StringReader reader = new StringReader(Strings.join(" ", args, from, to));
-    reader.readNext(); // skip prefix
+    if (reader.peekNext() == Selectors.prefix) reader.skip(); // skip prefix
     String selec = reader.readWord(false);
     if (selec == null) throw reader.expected("a selector name");
     selector = Selectors.get(selec);
     if (selector == null) throw reader.notFound("selector", selec);
 
-    properties = reader.readArraySet(SelectorParser::readKey, SelectorParser::readValue, "property name");
+    properties = reader.readArraySet(this::readKey, this::readValue, "property name");
 
     selected = selector.select(executor == null ? null : executor.player,
                                properties == null ? null : properties.values().toSeq());
+
+    //TODO: use ParseException to show where it is. In case of multiple selectors being parsed
     if (onlyPlayers && !selected.allMatch(Unit::isPlayer))
       throw new IllegalArgumentException("The selector is targeting non-player units, but only players are expected");
+    if (onlyOne && selected.size > 1)
+      throw new IllegalArgumentException("The selector is targeting more than one player or unit");
 
-    rest = reader.toString().strip().split(" ");
+    String r = reader.toString().strip();
+    rest = r.isBlank() ? new String[0] : r.split(" ");
   }
 
   public boolean noTargetFound() {
     return target == null && (selector == null || selected.isEmpty());
   }
 
-  public String formatMessage(String verb) { return formatMessage(verb, false); }
-  public String formatMessage(String verb, boolean addColors) {
+  public String formatMessage(String verb) { return format(executor, verb, null, null); }
+  public String formatMessage(PlayerData src, String verb) { return format(src, verb, null, null); }
+  public String formatColorMessage(String verb)  { return format(executor, verb, "[accent]", "[]"); }
+  public String formatColorMessage(PlayerData src, String verb)  { return format(src, verb, "[accent]", "[]"); }
+  public String format(PlayerData executor, String verb, String colorAdd, String colorClear) {
     StringBuilder builder = new StringBuilder();
     builder.append(verb).append(' ');
 
     if (target != null) {
       if (target == executor) {
-        if (addColors) builder.append("[accent]");
+        if (colorAdd != null) builder.append(colorAdd);
         builder.append("yourself");
-        if (addColors) builder.append("[]");
-      } else builder.append(addColors ? target.getName() : target.stripedName);
+        if (colorClear != null) builder.append(colorClear);
+      } else builder.append(colorAdd != null ? target.getName() : target.stripedName);
 
     } else if (selected == null || selected.isEmpty()) {
       builder.setLength(0);
@@ -112,36 +127,36 @@ public class SelectorParser {
       Unit unit = selected.first();
 
       if (unit.isPlayer()) {
-        PlayerData player = PlayerData.get(unit.getPlayer());
+        PlayerData player = PlayerData.get(unit);
         if (player == null) // In case of
-          builder.append(addColors ? unit.getPlayer().coloredName() : Strings.normalize(unit.getPlayer().name));
-        else if (player != executor) builder.append(addColors ? player.getName() : player.stripedName);
+          builder.append(colorAdd != null ? unit.getPlayer().coloredName() : Strings.normalize(unit.getPlayer().name));
+        else if (player != executor) builder.append(colorAdd != null ? player.getName() : player.stripedName);
         else {
-          if (addColors) builder.append("[accent]");
+          if (colorAdd != null) builder.append(colorAdd);
           builder.append("yourself");
-          if (addColors) builder.append("[]");
+          if (colorClear != null) builder.append(colorClear);
         }
       } else {
-        builder.append(Strings.aOrAn(unit.type.name)).append(' ');
-        if (addColors) builder.append("[accent]");
+        builder.append(Strings.articleFor(unit.type.name)).append(' ');
+        if (colorAdd != null) builder.append(colorAdd);
         builder.append(unit.type.name);
-        if (addColors) builder.append("[]");
+        if (colorClear != null) builder.append(colorClear);
       }
 
     } else {
       int players = selected.count(Unit::isPlayer), units = selected.size - players;
       if (players > 0) {
-        if (addColors) builder.append("[accent]");
+        if (colorAdd != null) builder.append(colorAdd);
         builder.append(players).append(" player");
         if (players > 1) builder.append('s');
-        if (addColors) builder.append("[]");
+        if (colorClear != null) builder.append(colorClear);
       }
       if (players > 0 && players < selected.size) builder.append(" and ");
       if (units > 0) {
-        if (addColors) builder.append("[accent]");
+        if (colorAdd != null) builder.append(colorAdd);
         builder.append(units).append(" unit");
         if (units > 1) builder.append('s');
-        if (addColors) builder.append("[]");
+        if (colorClear != null) builder.append(colorClear);
       }
     }
 
@@ -151,47 +166,16 @@ public class SelectorParser {
   public void execute(Cons2<PlayerData, Unit> consumer) {
     if (target != null) consumer.get(target, target.player.unit());
     else if (selected != null && selected.any())
-      selected.each(u -> consumer.get(PlayerData.get(u.getPlayer()), u));
+      selected.each(u -> consumer.get(PlayerData.get(u), u));
   }
 
-  protected static String readKey(StringReader reader) {
+  protected String readKey(StringReader reader) {
     return (StringReader.isQuote(reader.peek()) ? reader.readQuotedString(false) : reader.readUntil('=')).strip();
   }
 
-  protected static SelectorProperty.Parsed readValue(StringReader reader, String key) {
+  protected SelectorProperty.Parsed readValue(StringReader reader, String key) {
     SelectorProperty property = SelectorProperties.get(key);
     if (property == null) throw reader.notFound("property", key);
     return property.read(reader);
-  }
-
-  public static SelectorParser parse(PlayerData executor, String[] args) {
-    return parse(executor, args, 0, args.length, false);
-  }
-  public static SelectorParser parse(PlayerData executor, String[] args, boolean onlyPlayers) {
-    return parse(executor, args, 0, args.length, onlyPlayers);
-  }
-  public static SelectorParser parse(PlayerData executor, String[] args, int from, int to) {
-    return parse(executor, args, from, to, false);
-  }
-
-  public static SelectorParser parse(PlayerData executor, String[] args, int from, int to, boolean onlyPlayers) {
-    try {
-      SelectorParser p = new SelectorParser(executor, args, from, to, onlyPlayers);
-      if (p.byPlayer && p.noTargetFound()) {
-        if (executor == null) throw new IllegalArgumentException("Player not found");
-        else executor.errPlayerNotFound();
-      }
-      else return p;
-    } catch (Exception e) {
-      String message = e.getMessage();
-      if (message == null || message.isEmpty()) message = e.getClass().getSimpleName();
-      else {
-        if (message.charAt(message.length()-1) != '.') message += '.';
-        message = quotes.matcher(message).replaceAll(executor == null ? "'&fr&lb$1&fr'" : "'[orange]$1[]'");
-      }
-      if (executor == null) throw new IllegalArgumentException(message);
-      else executor.err(message);
-    }
-    return null;
   }
 }

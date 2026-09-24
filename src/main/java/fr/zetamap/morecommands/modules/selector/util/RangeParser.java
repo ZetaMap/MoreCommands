@@ -19,6 +19,7 @@
 
 package fr.zetamap.morecommands.modules.selector.util;
 
+import fr.zetamap.morecommands.misc.Range;
 import fr.zetamap.morecommands.util.StringReader;
 import fr.zetamap.morecommands.util.StringReader.ParseException;
 

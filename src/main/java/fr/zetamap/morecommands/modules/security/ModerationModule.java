@@ -158,7 +158,7 @@ public class ModerationModule extends AbstractModule {
         logger.info("@ for @" + (reason != null ? " with reason: '@'." : '.'),
                     "&fr" + selector.formatMessage(action), DurationFormatter.format(duration), reason);
       else executor.ok("@ for @" + (reason != null ? " with reason: '@'." : '.'),
-                       "[]" + selector.formatMessage(action, true), DurationFormatter.format(duration), reason);
+                       "[]" + selector.formatColorMessage(action), DurationFormatter.format(duration), reason);
       return;
     }
 
@@ -305,7 +305,7 @@ public class ModerationModule extends AbstractModule {
         });
         if (selector.noTargetFound()) {
           if (executor == null) logger.info(selector.formatMessage("Un" + kind.verb) + '.');
-          else executor.ok(selector.formatMessage("Un" + kind.verb, true) + "[green].");
+          else executor.ok(selector.formatColorMessage("Un" + kind.verb) + "[green].");
         }
         return;
       }
@@ -610,12 +610,14 @@ public class ModerationModule extends AbstractModule {
       if (target != null) builder.append("  - [white]Country: [accent]").append(target.player.locale).append("[][]\n");
       builder.append("  - [white]UUID: [accent]").append(info.id).append("[][]\n")
              .append("  - [white]short UUID: [accent]").append(PlayerData.getShortUuid(info.id)).append("[][]\n")
-             .append("  - [white]Names: ").append(info.names.toString(", ", n ->
-               (n.equals(info.lastName) ? "[orange]" : "[accent]") + n.replace("[", "[[") + "[]" +
-               (n.equals(info.lastName) ? " [gray]([lightgray]last[])[]" : ""))).append("[]\n")
-             .append("  - [white]IPs: ").append(info.ips.toString(", ", ip ->
-               (ip.equals(info.lastIP) ? "[orange]" : "[accent]") + ip+ "[]" +
-               (ip.equals(info.lastIP) ? " [gray]([lightgray]last[])[]" : ""))).append("[]\n")
+             .append("  - [white]USIDs: [accent]").append(Modules.usid.admins == null
+               ? "[orange]" + info.adminUsid + "[]"
+               : Modules.usid.admins.getUsids(info.id).toString(", ",
+                   i -> (i.equals(info.adminUsid) ? "[orange]" : "[accent]") + i + "[]")).append("[]\n")
+             .append("  - [white]Names: ").append(info.names.toString(", ",
+               n -> (n.equals(info.lastName) ? "[orange]" : "[accent]") + n.replace("[", "[[") + "[]")).append("[]\n")
+             .append("  - [white]IPs: ").append(info.ips.toString(", ",
+               ip -> (ip.equals(info.lastIP) ? "[orange]" : "[accent]") + ip + "[]")).append("[]\n")
              .append("  - [white]Joins: [accent]").append(info.timesJoined).append("[][]\n")
              .append("  - [white]Total kicks: [accent]").append(info.timesKicked).append("[][]\n");
       long time = Time.millis();

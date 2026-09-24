@@ -102,7 +102,19 @@ public class AdminUsidModule extends AbstractSaveableModule {
     }
 
     protected ObjectSet<String> get(String id) {
-      return usids.get(id);
+      ObjectSet<String> u = usids.get(id);
+      // Check from server settings in case of
+      if (u == null) {
+        PlayerInfo info = getInfoOptional(id);
+        if (info != null) {
+          u = new ObjectSet<>(4);
+          if (info.adminUsid != null) {
+            u.add(info.adminUsid);
+            usids.put(id, u);
+          }
+        }
+      }
+      return u;
     }
 
     protected boolean contains(String id, String usid) {

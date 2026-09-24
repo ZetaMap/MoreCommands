@@ -316,10 +316,10 @@ public class StringReader {
                                              String keyKind) {
     if (!isArray()) return null;
     ObjectMap<K, V> map = new ObjectMap<>();
-    String pronoun = Strings.aOrAn(keyKind);
+    String article = Strings.articleFor(keyKind);
     readArray(r -> {
       K key = keyReader.get(r);
-      if (key == null) throw expected(pronoun + ' ' + keyKind);
+      if (key == null) throw expected(article + ' ' + keyKind);
       if (map.containsKey(key)) throw error("Duplicated " + keyKind);
       int assign = read();
       if (assign != '=') throw expected("a value assignment ('=')", assign);
@@ -334,10 +334,10 @@ public class StringReader {
   public <E> Seq<E> readArray(Func<StringReader, E> elementReader, String elementKind) {
     if (!isArray()) return null;
     Seq<E> seq = new Seq<>();
-    String pronoun = Strings.aOrAn(elementKind);
+    String article = Strings.articleFor(elementKind);
     readArray(r -> {
       E element = elementReader.get(r);
-      if (element == null) throw expected(pronoun + ' ' + elementKind);
+      if (element == null) throw expected(article + ' ' + elementKind);
       seq.add(element);
     });
     return seq;
@@ -348,10 +348,10 @@ public class StringReader {
   public <E> ObjectSet<E> readSet(Func<StringReader, E> elementReader, String elementKind) {
     if (!isArray()) return null;
     ObjectSet<E> set = new ObjectSet<>();
-    String pronoun = Strings.aOrAn(elementKind);
+    String article = Strings.articleFor(elementKind);
     readArray(r -> {
       E element = elementReader.get(r);
-      if (element == null) throw expected(pronoun + ' ' + elementKind);
+      if (element == null) throw expected(article + ' ' + elementKind);
       if (!set.add(element)) throw error("Duplicated " + elementKind);
     });
     return set;
@@ -366,19 +366,19 @@ public class StringReader {
       return true;
     }
 
-    String pronoun = Strings.aOrAn(kind);
+    String article = Strings.articleFor(kind);
     while (canPeekNext()) {
       reader.get(this);
       int read = read();
       if (read == ']') return true;
-      if (read != ',') throw expected(pronoun + ' ' + kind + " separator (',') or " +
-                                      pronoun + ' ' + kind + " end (']')", read);
+      if (read != ',') throw expected(article + ' ' + kind + " separator (',') or " +
+                                      article + ' ' + kind + " end (']')", read);
       if (peek() == ']') {
         pos++;
         return true;
       }
     }
-    throw expected(pronoun + ' ' + kind + " end (']')");
+    throw expected(article + ' ' + kind + " end (']')");
   }
 
   @Override

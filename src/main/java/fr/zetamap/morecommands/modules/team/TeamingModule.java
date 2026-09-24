@@ -87,7 +87,7 @@ public class TeamingModule extends AbstractModule {
     //TODO: allow this command in pvp?
     handler.addAdmin("team", "[teamName|vanish|~] [player|selector...]", "Change team.", (args, player) -> {
       if (args.length == 0) {
-        // Not a great idea to mix two behavior.
+        // Not a great idea to mix two behaviors.
         // But I don't want another argument or to run again '/team vanish' to get send back
         if (player.vanished()) {
           player.info("Transferring you back to your last team...");
@@ -123,7 +123,7 @@ public class TeamingModule extends AbstractModule {
         if (args[0].equals("~"))
           player.warn("Makes no sense to get transferred to your current team =/. Use this with a selector instead.");
         else if (!setTeam(player, team)) player.ok("Transferred you to the [white]@[] team.", teamName);
-        else player.ok("You are now in vanish mode. [lightgray]Use [gray]/team[] to disable it.");
+        else player.ok("You are now in vanish mode. [gray]Use [lightgray]/team[] to disable it.");
         return;
       }
 
@@ -142,11 +142,11 @@ public class TeamingModule extends AbstractModule {
         boolean vanish = setTeam(p, team);
         if (p == player) return;
         if (vanish) p.warn("You have been vanished by @." +
-                           (p.admin() ? " [lightgray]Use [gray]/team[] to disable it." : ""), player.getName());
+                           (p.admin() ? " [gray]Use [lightgray]/team[] to disable it." : ""), player.getName());
         else p.warn("You have been transferred to the @ team by @.", teamName, player.getName());
       });
-      if (team == PlayerData.vanishTeam) player.ok(parsed.formatMessage("Vanished", true) + "[green].");
-      else player.ok("@ to the @ team.", parsed.formatMessage("Transferred", true), teamName);
+      if (team == PlayerData.vanishTeam) player.ok(parsed.formatColorMessage("Vanished") + "[green].");
+      else player.ok("@ to the @ team.", parsed.formatColorMessage("Transferred"), teamName);
     });
   }
 }

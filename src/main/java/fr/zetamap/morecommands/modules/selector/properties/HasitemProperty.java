@@ -27,9 +27,9 @@ import mindustry.gen.Player;
 import mindustry.gen.Unit;
 import mindustry.type.Item;
 
+import fr.zetamap.morecommands.misc.Range;
 import fr.zetamap.morecommands.modules.selector.Selector;
 import fr.zetamap.morecommands.modules.selector.SelectorProperty;
-import fr.zetamap.morecommands.modules.selector.util.Range;
 import fr.zetamap.morecommands.modules.selector.util.RangeParser;
 import fr.zetamap.morecommands.util.StringReader;
 

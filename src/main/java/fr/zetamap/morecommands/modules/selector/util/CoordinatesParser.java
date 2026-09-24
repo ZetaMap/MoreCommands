@@ -1,6 +1,6 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
- * Copyright (c) 2021-2025  ZetaMap
+ * Copyright (c) 2021-2026  ZetaMap
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,16 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package fr.zetamap.morecommands.misc;
+package fr.zetamap.morecommands.modules.selector.util;
 
 import java.util.Arrays;
-import java.util.regex.Pattern;
 
-import arc.math.geom.Vec2;
+import arc.math.geom.*;
 
 import mindustry.Vars;
+import mindustry.core.World;
 
 import fr.zetamap.morecommands.PlayerData;
+import fr.zetamap.morecommands.misc.Players;
 import fr.zetamap.morecommands.util.Strings;
 
 
@@ -34,11 +35,11 @@ import fr.zetamap.morecommands.util.Strings;
  * and a single {@code '~'} can be used to specify both x and y axis.
  */
 public class CoordinatesParser {
-  private static final Pattern quotes = Pattern.compile("'(.*?)'");
   public static final char worldRelativePrefix = '~', separator = ',';
 
-  public final PlayerData target;
-  public final Vec2 pos = new Vec2();
+  public final PlayerData executor, target;
+  public final Vec2 pos;
+  public final Point2 wpos;
   public final boolean byCoordinates;
   public final String[] rest;
 
@@ -47,9 +48,10 @@ public class CoordinatesParser {
   }
 
   public CoordinatesParser(PlayerData executor, String[] args, int from, int to) throws IllegalArgumentException {
-    if (args.length == 0 || from < 0 || to > args.length || from >= to || args[from].isEmpty())
+    if (Strings.checkStringArray(args, from, to))
       throw new IllegalArgumentException("Missing coordinates or player name/uuid");
 
+    this.executor = executor;
     String coor = args[from];
     int length = coor.length();
 
@@ -60,20 +62,21 @@ public class CoordinatesParser {
         if (result.player.player.dead())
           throw new IllegalArgumentException("Unable to find target player position");
         target = result.player;
-        pos.set(result.player.player);
+        pos = new Vec2().set(result.player.player);
+        wpos = toWorld(pos);
         byCoordinates = false;
         rest = result.rest;
         return;
       }
-    }
+    } else if (executor == null) throw new IllegalArgumentException("Unable to find player position");
 
     int comma = coor.indexOf(separator);
     float x, y;
 
     if (comma != -1) {
-      x = parseCoordinate(executor, coor, 0, comma == -1 ? length : comma, executor.player.x);
+      x = parseCoordinate(executor, coor, 0, comma == -1 ? length : comma, false);
       if (comma == length-1) throw new IllegalArgumentException("Missing 'y' axis after comma");
-      y = parseCoordinate(executor, coor, comma+1, length, executor.player.y);
+      y = parseCoordinate(executor, coor, comma+1, length, true);
     } else if (isRelativeCoordinate(coor, 0, length)) {
       if (executor.player.dead()) throw new IllegalArgumentException("Unable to find player position");
       x = y = parseWorldCoordinate(coor, 1, length);
@@ -85,7 +88,8 @@ public class CoordinatesParser {
 
 
     target = executor;
-    pos.set(x, y);
+    pos = new Vec2(x, y);
+    wpos = toWorld(pos);
     byCoordinates = true;
     rest = Arrays.copyOfRange(args, from+1, to);
   }
@@ -94,35 +98,25 @@ public class CoordinatesParser {
     return arg.charAt(from) == worldRelativePrefix;
   }
 
-  private static float parseCoordinate(PlayerData executor, String arg, int from, int to, float base) {
+  private static float parseCoordinate(PlayerData executor, String arg, int from, int to, boolean isY) {
     if (to <= from) throw new IllegalArgumentException("Invalid coordinates or player not found");
     if (isRelativeCoordinate(arg, from, to)) {
       // Check whether the player is dead, because relative coordinates will be wrong
-      if (executor.player.dead()) throw new IllegalArgumentException("Unable to find player position");
-      return base + parseWorldCoordinate(arg, from+1, to);
+      if (executor == null || executor.player.dead())
+        throw new IllegalArgumentException("Unable to find player position");
+      return (isY ? executor.player.y : executor.player.x) + parseWorldCoordinate(arg, from+1, to);
     }
     return parseWorldCoordinate(arg, from, to);
   }
 
-  private static float parseWorldCoordinate(String arg, int from, int to) {
-    if (to <= from) return 0f;
+  private static int parseWorldCoordinate(String arg, int from, int to) {
+    if (to <= from) return 0;
     int offset = Strings.parseInt(arg, 10, Integer.MIN_VALUE, from, to);
     if (offset == Integer.MIN_VALUE) throw new IllegalArgumentException("Invalid coordinates or player not found");
     return offset * Vars.tilesize; // scale
   }
 
-  public static CoordinatesParser parse(PlayerData executor, String[] args) { return parse(executor, args, 0, args.length); }
-  public static CoordinatesParser parse(PlayerData executor, String[] args, int from, int to) {
-    try { return new CoordinatesParser(executor, args, from, to); }
-    catch (Exception e) {
-      String message = e.getMessage();
-      if (message == null || message.isEmpty()) message = e.getClass().getSimpleName();
-      else {
-        if (message.charAt(message.length()-1) != '.') message += '.';
-        message = quotes.matcher(message).replaceAll("'[orange]$1[]'");
-      }
-      executor.err(message);
-    }
-    return null;
+  public static Point2 toWorld(Position pos) {
+    return new Point2(World.toTile(pos.getX()), World.toTile(pos.getY()));
   }
 }

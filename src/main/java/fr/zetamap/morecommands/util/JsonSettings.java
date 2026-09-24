@@ -230,7 +230,7 @@ public class JsonSettings implements Autosaver.Saveable {
 
   /** Copies content from {@link #file()} to {@link #backupFile()}. */
   public void backup() {
-    if (isBackuped()) file().copyTo(backupFile());
+    if (isBackuped() && exists()) file().copyTo(backupFile());
   }
 
   /** Save loaded values to {@link #backupFile()}. */

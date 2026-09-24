@@ -74,7 +74,7 @@ public class GodmodeModule extends AbstractModule {
     // Instant unit kill
     Events.on(EventType.UnitDamageEvent.class, e -> {
       if (e.unit.dead || !(e.bullet.owner instanceof Unitc u) || u == e.unit) return;
-      PlayerData player = PlayerData.get(u.getPlayer());
+      PlayerData player = PlayerData.get(u);
       if (player == null || !player.inGodmode) return;
       e.unit.kill();
     });
@@ -82,7 +82,7 @@ public class GodmodeModule extends AbstractModule {
     // Instant block destroy
     Events.on(EventType.BuildDamageEvent.class, e -> {
       if (e.build.dead || !(e.source.shooter instanceof Unitc u)) return;
-      PlayerData player = PlayerData.get(u.getPlayer());
+      PlayerData player = PlayerData.get(u);
       if (player == null || !player.inGodmode) return;
       e.build.kill();
     });

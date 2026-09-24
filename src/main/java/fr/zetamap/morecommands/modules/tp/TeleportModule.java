@@ -20,18 +20,16 @@ package fr.zetamap.morecommands.modules.tp;
 
 import arc.math.geom.Position;
 
-import mindustry.core.World;
 import mindustry.gen.Call;
 import mindustry.gen.Unit;
 
 import fr.zetamap.morecommands.Modules;
 import fr.zetamap.morecommands.PlayerData;
 import fr.zetamap.morecommands.command.ClientCommandHandler;
-import fr.zetamap.morecommands.misc.CoordinatesParser;
-import fr.zetamap.morecommands.misc.Players;
 import fr.zetamap.morecommands.module.AbstractModule;
-import fr.zetamap.morecommands.modules.selector.SelectorParser;
-import fr.zetamap.morecommands.modules.selector.Selectors;
+import fr.zetamap.morecommands.modules.selector.*;
+import fr.zetamap.morecommands.modules.selector.util.CoordinatesParser;
+import fr.zetamap.morecommands.modules.selector.util.TargetResult;
 
 
 public class TeleportModule extends AbstractModule {
@@ -56,63 +54,61 @@ public class TeleportModule extends AbstractModule {
 
   @Override
   public void registerClientCommands(ClientCommandHandler handler) {
-    handler.addAdmin("tp", "<player|selector|src-x,y> [player|dest-x,y...]", "Teleport to a location or player.",
-    (args, player) -> {
-      if (args[0].isEmpty()) player.err("Missing player, coordinates or selector.");
+    handler.addAdmin("tp", "<player|selector|src-x,y> [player|selector|dest-x,y...]",
+                     "Teleport to a location or player.", (args, player) -> {
+      // First, parse manually, to check arguments.
+      // Coordinates cannot be at the first, and selector cannot target more than once at the second.
+      boolean withSrc = false;
+      try {
+        boolean coords = false;
+        String[] rest;
+        if (Selectors.isSelector(args[0])) {
+          if (!Modules.selector.enabled()) {
+            player.err("Selectors are disabled, you cannot use them.");
+            return;
+          }
+          rest = new SelectorParser(player, args).rest;
+        } else {
+          CoordinatesParser coord = new CoordinatesParser(player, args);
+          rest = coord.rest;
+          coords = coord.byCoordinates;
+        }
 
-      else if (Selectors.isSelector(args[0])) {
+        if (rest.length > 0) {
+          if (coords) {
+            player.err("Cannot use coordinates as a source. \nUsage: @ or @.",
+                       "/tp <player|selector|x,y>", "/tp <player|selector> <player|selector|x,y>");
+            return;
+          }
+          withSrc = true;
+        }
+      } catch (Exception e) {
+        Modules.selector.error(player, e);
+        return;
+      }
+
+
+      if (withSrc) {
         SelectorParser selector = Modules.selector.parse(player, args);
-        if (selector == null) return; // Error already send to player
-        CoordinatesParser dest = CoordinatesParser.parse(player, selector.rest);
-        if (dest == null) return; // Error already send to player
-
-        int tx = World.toTile(dest.pos.x), ty = World.toTile(dest.pos.y), x = (int)dest.pos.x, y = (int)dest.pos.y;
+        if (selector == null) return;
+        TargetResult dest = Modules.selector.parseOne(player, selector.rest);
+        if (dest == null) return;
         selector.execute((p, u) -> {
           if (p != null) {
             teleport(p, dest.pos);
             if (p == player) return;
-            if (dest.byCoordinates)
-              Players.warn(p, "You have been teleported to [accent]@,@[] [gray]([lightgray]@[],[lightgray]@[])[] by @[orange].",
-                           tx, ty, x, y, player.getName());
-            else p.warn("You have been teleported to @ by @.", dest.target.getName(), player.getName());
+            p.warn("You have been teleported to @ by @.", dest.formatColors(p), player.getName());
           } else teleport(u, dest.pos);
         });
-        if (dest.byCoordinates)
-          Players.ok(player, "@[green] to [accent]@,@[] [gray]([lightgray]@[],[lightgray]@[])[].",
-                     selector.formatMessage("Teleported", true), tx, ty, x, y);
-        else player.ok("@ to @.", selector.formatMessage("Teleported", true), dest.target.getName());
+        player.ok("@ to @.", selector.formatColorMessage("Teleported"), dest.formatColors());
 
       } else {
-        CoordinatesParser src = CoordinatesParser.parse(player, args);
-        if (src == null) return; // Error already send to player
-        else if (src.byCoordinates && src.rest.length > 0)
-          player.err("Too many arguments. Usage: @ or @.", "/tp <player|x,y>", "/tp <player|selector> <player|x,y>");
-
-        else if (src.rest.length > 0) {
-          CoordinatesParser dest = CoordinatesParser.parse(player, src.rest);
-          if (dest == null) return; // Error already send to player
-
-          teleport(src.target, dest.pos);
-          if (dest.byCoordinates) {
-            int tx = World.toTile(dest.pos.x), ty = World.toTile(dest.pos.y), x = (int)dest.pos.x, y = (int)dest.pos.y;
-            Players.ok(player, "Teleported @[green] to [accent]@,@[] [gray]([lightgray]@[],[lightgray]@[])[].",
-                       src.target.getName(), tx, ty, x, y);
-            Players.warn(src.target, "You have been teleported to [accent]@,@[] [gray]([lightgray]@[],[lightgray]@[])[] by @[orange].",
-                         tx, ty, x, y, player.getName());
-          } else {
-            player.ok("Teleported @ to @.", src.target.getName(), dest.target.getName());
-            src.target.warn("You have been teleported to @ by @.", dest.target.getName(), player.getName());
-          }
-
-        } else if (player.player.dead()) {
-          player.err("Unable to find player position.");
-        } else {
-          teleport(player, src.pos);
-          if (src.byCoordinates) {
-            int tx = World.toTile(src.pos.x), ty = World.toTile(src.pos.y), x = (int)src.pos.x, y = (int)src.pos.y;
-            Players.ok(player, "You teleported to @,@ [gray]([lightgray]@[],[lightgray]@[])[].", tx, ty, x, y);
-          } else player.ok("You teleported to @.", src.target.getName());
-        }
+        TargetResult dest = Modules.selector.parseOne(player, args);
+        if (dest == null) return;
+        if (!player.player.dead()) {
+          teleport(player, dest.pos);
+          player.ok("You teleported to @.", dest.formatColors());
+        } else player.err("Unable to locate @ position.", "your");
       }
     });
 

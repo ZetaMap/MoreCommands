@@ -33,9 +33,7 @@ import arc.util.serialization.Base64Coder;
 import mindustry.Vars;
 import mindustry.game.EventType;
 import mindustry.game.Team;
-import mindustry.gen.Call;
-import mindustry.gen.Player;
-import mindustry.gen.Unit;
+import mindustry.gen.*;
 import mindustry.net.Packets.KickReason;
 
 import fr.zetamap.morecommands.misc.Gatekeeper;
@@ -128,7 +126,7 @@ public class PlayerData {
    *         else the player's colored name.
    */
   public String getName() {
-    return vanished() ? "" : rainbowed ? rainbowName : "[#" + player.color.toString() + "]" + realName + "[white]";
+    return vanished() ? "" : rainbowed ? rainbowName : "[#" + player.color.toString() + "]" + realName + "[]";
   }
 
   public boolean hasWhispered() {
@@ -194,6 +192,10 @@ public class PlayerData {
 
   public static PlayerData get(Player player) {
     return player == null ? null : get(player.id);
+  }
+
+  public static PlayerData get(Unitc unit) {
+    return unit == null ? null : get(unit.getPlayer());
   }
 
   public static PlayerData get(String uuid) {
@@ -291,6 +293,7 @@ public class PlayerData {
       e.connection.uuid = e.packet.uuid // Fixes uuid not showing on the console when kicking a player
     );
 
+    //TODO: block UUID-like nicknames
     // Check nicknames
     Gatekeeper.add("nickname-requirements", ctx ->
       ctx.strippedName.isBlank() ? Gatekeeper.reject(KickReason.nameEmpty) :

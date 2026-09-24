@@ -352,7 +352,7 @@ public class MiscModule extends AbstractModule {
       selector.execute((p, u) -> {
         if (syncPlayer(p) && player != p) p.warn("World state resynchronized by @.", player.getName());
       });
-      player.ok(selector.formatMessage("Resynchronized", true) + "[green].");
+      player.ok(selector.formatColorMessage("Resynchronized") + "[green].");
     });
 
     handler.addAdmin("fillitems", "[team|all] [items...]",

@@ -103,26 +103,9 @@ public class Structs extends arc.util.Structs {
     return index;
   }
 
-  public static int bits2int(boolean... list) {
-    int out = 0;
-    for (boolean element : list) {
-      out |= element ? 1 : 0;
-      out <<= 1;
-    }
-    return out >> 1;
+  /** @return {@code true} is pos are invalids. */
+  public static <T> boolean checkPos(T[] arr, int from, int to) {
+    return arr == null || arr.length == 0 || from < 0 || to > arr.length || from >= to;
   }
 
-  public static boolean[] int2bits(int number) { return int2bits(number, 0); }
-  public static boolean[] int2bits(int number, int bits) {
-    // Check value because 0 have a negative size
-    if (number == 0) return new boolean[bits == 0 ? 1 : bits];
-
-    int size = bits < 1 ? (int)(Math.log(number)/Math.log(2)+1) : bits;
-    boolean[] out = new boolean[size];
-    while (size-- > 0) {
-      out[size] = (number & 1) != 0;
-      number >>= 1;
-    }
-    return out;
-  }
 }

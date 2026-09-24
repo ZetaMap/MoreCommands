@@ -66,17 +66,25 @@ public class Players {
   public static SearchResult findByName(String[] args, int from, int to) { return findByName(Strings.join(" ", args, from, to)); }
   /**
    * Tries to find a player by their name. (sorted by most larger name first to avoid non-targatable players) <br>
-   * Non-targatable players are players that includes a command argument or information of another player
+   * Non-targatable players are ones that includes a command argument or info of another player
    * at end of his nickname, to not be targeted by commands.
    */
   public static SearchResult findByName(String arg) {
-    String args = Strings.normalize(arg) + " ";
+    String normalized = Strings.normalize(arg) + " ";
     // Sort descending
     PlayerData.sort((p1, p2) -> Integer.compare(p2.stripedName.length(), p1.stripedName.length()));
-    PlayerData target = PlayerData.find(p -> args.startsWith(p.stripedName + " "));
+    PlayerData target = PlayerData.find(p -> normalized.startsWith(p.stripedName + " "));
 
-    //TODO: avoid to removes colors to the rest of arguments
-    return new SearchResult(target, (target == null ? arg : args.substring(target.stripedName.length()).strip()).split(" "));
+    if (target != null) {
+      // Avoid to normalize rest of arguments
+      int p = 0, n = arg.length(), l = target.stripedName.length();
+      for (; p<=n; p++) {
+        if (Strings.normalize(arg.substring(0, p)).length() >= l) break;
+      }
+      arg = arg.substring(p).strip();
+    }
+
+    return new SearchResult(target, arg.split(" "));
   }
 
   public static SearchResult findByID(String arg) { return findByID(arg.split(" ")); }
@@ -138,7 +146,7 @@ public class Players {
     public SearchResult(PlayerData player, String[] rest) {
       this.player = player;
       // In case of
-      this.rest = rest.length == 1 && rest[0].isEmpty() ? new String[0] : rest;
+      this.rest = rest.length == 1 && rest[0].isBlank() ? new String[0] : rest;
       this.found = player != null;
     }
   }
