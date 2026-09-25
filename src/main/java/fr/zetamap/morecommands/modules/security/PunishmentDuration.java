@@ -1,6 +1,6 @@
 /**
  * This file is part of MoreCommands. The plugin that adds a bunch of commands to your server.
- * Copyright (c) 2025  ZetaMap
+ * Copyright (c) 2025-2026  ZetaMap
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

@@ -18,8 +18,10 @@
 
 package fr.zetamap.morecommands;
 
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.Comparator;
+import java.util.zip.CRC32;
 
 import arc.Core;
 import arc.Events;
@@ -49,6 +51,7 @@ public class PlayerData {
 
   protected static final IntMap<PlayerData> map = new IntMap<>(32);
   protected static final Seq<PlayerData> array = new Seq<>(false, 32);
+  protected static final CRC32 crc = new CRC32();
 
   public final Player player;
   /** The player uuid without the checksum part. So on 8 bytes instead of 16. */
@@ -198,6 +201,16 @@ public class PlayerData {
     catch (Exception e) { return null; }
   }
 
+  public static boolean validateUuid(String uuid) {
+    try {
+      byte[] data = Base64Coder.decode(uuid);
+      if (data.length != Long.BYTES * 2) return false;
+      crc.reset();
+      crc.update(data, 0, Long.BYTES);
+      return crc.getValue() == ByteBuffer.wrap(data).getLong();
+    } catch (Exception ignored) { return false; }
+  }
+
   public static PlayerData get(int id) {
     return map.get(id);
   }
@@ -214,6 +227,7 @@ public class PlayerData {
     return uuid == null ? null : array.find(p -> p.uuid.equals(uuid));
   }
 
+  /** INTERNAL! */
   public static PlayerData add(Player player) {
     if (player == null) return null;
     PlayerData data = get(player);
@@ -225,6 +239,7 @@ public class PlayerData {
     return data;
   }
 
+  /** INTERNAL! */
   public static PlayerData remove(Player player) {
     PlayerData data = get(player);
     if (data == null) return null;
@@ -297,7 +312,7 @@ public class PlayerData {
     Events.on(EventType.PlayerLeave.class, e -> {
       // Restore the player name for the disconnect message.
       e.player.name = PlayerData.get(e.player).realName;
-      // Delay removal to let others components handle the event.
+      // Delay removal to let others components handling the event.
       Core.app.post(() -> PlayerData.remove(e.player));
     });
 
@@ -305,13 +320,20 @@ public class PlayerData {
       e.connection.uuid = e.packet.uuid // Fixes uuid not showing on the console when kicking a player
     );
 
-    //TODO: block UUID-like nicknames
     // Check nicknames
     Gatekeeper.add("nickname-requirements", ctx ->
       ctx.strippedName.isBlank() ? Gatekeeper.reject(KickReason.nameEmpty) :
       ctx.strippedName.length() < 2 ? Gatekeeper.reject("Your nickname must be at least [orange]2[] characters long.") :
       Vars.netServer.admins.isStrict() && find(d -> d.stripedName.equals(ctx.strippedName)) != null ?
         Gatekeeper.reject(KickReason.nameInUse) :
+      Gatekeeper.accept()
+    );
+
+    Gatekeeper.add("uuid-check", ctx ->
+      Vars.netServer.admins.getInfoOptional(ctx.strippedName) != null || validateUuid(ctx.strippedName) ?
+        Gatekeeper.reject("Please do not put UUID in your nickname.") :
+      !validateUuid(ctx.uuid) ?
+        Gatekeeper.reject("Invalid UUID!") :
       Gatekeeper.accept()
     );
   }

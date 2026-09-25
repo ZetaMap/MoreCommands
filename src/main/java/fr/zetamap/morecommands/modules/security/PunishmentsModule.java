@@ -46,7 +46,7 @@ public class PunishmentsModule extends AbstractSaveableModule {
   private final IntMap<IntervalProv> rateLimitCache = new IntMap<>();
   /** Reused instance */
   private final Punishment[] currentPunishment = new Punishment[Punishment.Type.all.length];
-  private final OrderedMap<PlayerData, Vec2> currentlyFrozen = new OrderedMap<>();
+  private final OrderedMap<PlayerData, Vec2> currentlyFrozen = new OrderedMap<>(); // Use ArrayMap?
   private final IntervalProv freezeTimer = new IntervalProv(2);
   private final float messageRateLimit = 3 * 60, freezePunishmentUpdateTime = 5 * 60, freezeUpdateTime = 60 / 30;
   private final int rates = 2;
@@ -373,7 +373,13 @@ public class PunishmentsModule extends AbstractSaveableModule {
       }
     });
 
-    //TODO: re-apply freeze at reconnection
+    // Reapply freeze at reconnection
+    Events.on(EventType.PlayerJoin.class, e -> {
+      PlayerData p = PlayerData.get(e.player);
+      if (!is(p, Punishment.Type.freeze)) return;
+      currentlyFrozen.put(p, e.player.core() != null ? new Vec2().set(e.player.closestCore()) :
+        new Vec2(Vars.world.unitWidth()/2, Vars.world.unitHeight()/2));
+    });
 
     Events.on(EventType.PlayerLeave.class, e -> {
       rateLimitCache.remove(e.player.id);
@@ -482,7 +488,7 @@ public class PunishmentsModule extends AbstractSaveableModule {
     Vars.netServer.admins.addActionFilter(a ->
       getrate(a.player).get(1, messageRateLimit, () -> {
         if (is(a.player.uuid(), Punishment.Type.freeze)) {
-          Players.err(a.player, "You are frozen, you can no longer move or interact with the game elements.");
+          Players.err(a.player, "You're frozen, you can't move or interact with game elements!");
           return false;
         }
         return true;
@@ -555,12 +561,11 @@ public class PunishmentsModule extends AbstractSaveableModule {
 
     if (isAddress && punishment.address != null)
       builder.append("Your IP address [gray]([lightgray]").append(punishment.address).append("[])[] ")
-             .append(now ? "has been" : "is");
-    else builder.append(now ? "You have been" : "You are");
+             .append(now ? "has been" : "was");
+    else builder.append(now ? "You have been" : "You were");
 
     builder.append(" [accent]").append(punishment.type.verb).append("[]");
     if (punishment.type.impliesKick) builder.append(" from this server");
-    //TODO: sentence seems not correct if now is false
 
     // Avoid to display the people who started the votekick, to avoid potential consequences from players...
     if (authorName != null && punishment.type != Punishment.Type.votekick)
@@ -568,8 +573,8 @@ public class PunishmentsModule extends AbstractSaveableModule {
 
     // A punishment duration for a warn makes no sense.
     if (punishment.type != Punishment.Type.warn)
-      builder.append(" for [accent]").append(DurationFormatter.format(now ? punishment.duration() : punishment.remaining()))
-             .append("[]");
+      builder.append(" for [accent]")
+             .append(DurationFormatter.format(now ? punishment.duration() : punishment.remaining())).append("[]");
 
     if (punishment.reason != null) builder.append(".\nReason: [accent]").append(punishment.reason).append("[white].");
     else if (punishment.type != Punishment.Type.freeze) builder.append(".\nReason: [lightgray](no reason)[].");

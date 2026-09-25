@@ -27,8 +27,7 @@ import mindustry.mod.Plugin;
 import mindustry.net.Administration.Config;
 
 import fr.zetamap.morecommands.migration.SettingsMigrator;
-import fr.zetamap.morecommands.misc.Gatekeeper;
-import fr.zetamap.morecommands.misc.StaleConnectionsCleaner;
+import fr.zetamap.morecommands.misc.*;
 import fr.zetamap.morecommands.module.ModuleRegistry;
 import fr.zetamap.morecommands.util.Autosaver;
 import fr.zetamap.morecommands.util.Logger;
@@ -57,6 +56,8 @@ public class Main extends Plugin {
     PlayerData.init();
     Gatekeeper.init();
     StaleConnectionsCleaner.init();
+    ConnectionRateLimiter.init();
+
     if (check(ModuleRegistry::init)) return;
     SettingsMigrator.enabled = false; //TODO: debug
     if (check(SettingsMigrator::migrateAllTheShittySettingsIMade)) return;
